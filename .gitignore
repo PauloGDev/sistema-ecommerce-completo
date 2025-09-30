@@ -1,0 +1,18 @@
+# Node.js
+frontend/node_modules/
+frontend/build/
+
+# Java / Spring Boot
+backend/target/
+*.class
+
+# Arquivos de configuração locais
+digitaltricks/src/main/resources/application.properties
+.env
+
+# IDEs
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
