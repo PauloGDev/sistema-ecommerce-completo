@@ -34,7 +34,7 @@ Sistema com painel administrativo, gerenciamento de usuários, catálogo de perf
 
 ### Pré-requisitos
 
-* Java 17+ e Maven
+* Java 17+ e gradle
 * Node.js 16+ e npm/yarn
 * PostgreSQL (ou serviço equivalente)
 * (Opcional) Docker e docker-compose
@@ -81,7 +81,7 @@ No terminal:
 ```bash
 cd frontend
 npm install
-npm start
+npm run dev
 ```
 
 O frontend padrão abre em `http://localhost:3000`.
@@ -90,9 +90,6 @@ Para gerar build de produção:
 
 ```bash
 npm run build
-# servir build (ex.: usando serve)
-# npm install -g serve
-serve -s build
 ```
 
 ---
