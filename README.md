@@ -30,3 +30,26 @@ Sistema completo para gerenciamento de usuários, painel admin, produtos e pedid
 
 ---
 
+## 🚀 Instalação e execução
+
+### Backend (Spring Boot)
+1. Configure suas variáveis de ambiente (exemplo: Stripe API Key) no seu sistema ou `.env`:
+STRIPE_SECRET_KEY=sk_test_XXXXXX
+
+arduino
+Copiar código
+2. Execute o backend:
+cd backend
+mvn clean install
+mvn spring-boot:run
+Frontend (ReactJS)
+bash
+Copiar código
+cd frontend
+npm install
+npm start
+
+O frontend será aberto em http://localhost:3000 e o backend em http://localhost:8080.
+
+🌐 Contato
+https://digitaltricks.com.br
