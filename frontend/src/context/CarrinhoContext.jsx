@@ -1,4 +1,3 @@
-// src/context/CarrinhoContext.jsx
 import { createContext, useContext, useState, useEffect } from "react";
 
 const CarrinhoContext = createContext();
@@ -83,23 +82,23 @@ const decrementarItem = async (produtoId) => {
   }
 };
 
+const adicionarAoCarrinho = async (produtoId, variacaoId = null, quantidade = 1) => {
+  try {
+    const usuarioId = localStorage.getItem("usuarioId");
+    const url = `${API}/adicionar?usuarioId=${usuarioId}&produtoId=${produtoId}&quantidade=${quantidade}${
+      variacaoId ? `&variacaoId=${variacaoId}` : ""
+    }`;
 
-
-    const adicionarAoCarrinho = async (produtoId, quantidade = 1) => {
-    try {
-      const usuarioId = localStorage.getItem("usuarioId");
-      const response = await fetch(
-        `${API}/adicionar?usuarioId=${usuarioId}&produtoId=${produtoId}&quantidade=${quantidade}`,
-        defaultOptions("POST")
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setCarrinho(data);
-      }
-    } catch (err) {
-      console.error("Erro ao adicionar item:", err);
+    const response = await fetch(url, defaultOptions("POST"));
+    if (response.ok) {
+      const data = await response.json();
+      setCarrinho(data);
     }
-  };
+  } catch (err) {
+    console.error("Erro ao adicionar item:", err);
+  }
+};
+
 
   const removerDoCarrinho = async (produtoId) => {
     try {

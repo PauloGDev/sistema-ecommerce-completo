@@ -17,7 +17,6 @@ import { CarrinhoProvider } from "./context/CarrinhoContext";
 // IMPORTAR o ícone do WhatsApp
 import { FaWhatsapp } from "react-icons/fa";
 import Dashboard from "./pages/Dashboard";
-import Carrinho from "./components/carrinho";
 import CarrinhoPopup from "./context/CarrinhoPopup";
 import PrivateRoute from "./context/PrivateRoute";
 import Login from "./pages/Login";
@@ -28,6 +27,9 @@ import CheckoutPage from "./pages/Checkout";
 import PedidosPage from "./pages/PedidosPage";
 import SuccessPage from "./pages/SuccessPage";
 import CancelPage from "./pages/CancelPage";
+import ForgotPassword from "./pages/login/ForgotPassword";
+import ResetPassword from "./pages/login/ResetPassword";
+import CarrinhoPage from "./components/CarrinhoPage";
 
 const App = () => {
   const [loading, setLoading] = useState(true);
@@ -78,6 +80,24 @@ const App = () => {
           }
         />
         <Route
+          path="/forgot-password"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/reset-password"
+          element={
+            <PublicRoute>
+              <ResetPassword />
+            </PublicRoute>
+          }
+        />
+
+        <Route
           path="/register"
           element={
             <PublicRoute>
@@ -90,7 +110,7 @@ const App = () => {
         <Route
           path="/painel"
           element={
-            <PrivateRoute>
+            <PrivateRoute role="USER">
               <UserPanel />
             </PrivateRoute>
           }
@@ -130,7 +150,7 @@ const App = () => {
           }
         />
 
-        <Route path="/carrinho" element={<Carrinho />} />
+        <Route path="/carrinho" element={<CarrinhoPage />} />
         <Route path="/produtos/:slug" element={<ProdutoPage />} />
         <Route path="*" element={<Error404 />} />
         <Route

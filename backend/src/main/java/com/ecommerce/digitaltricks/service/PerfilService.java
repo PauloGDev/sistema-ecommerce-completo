@@ -26,6 +26,7 @@ public class PerfilService {
                 perfil.getId(),
                 perfil.getNomeCompleto(),
                 perfil.getTelefone(),
+                perfil.getCpf(),
                 perfil.getEnderecos() != null
                         ? perfil.getEnderecos().stream()
                         .map(e -> new EnderecoDTO(

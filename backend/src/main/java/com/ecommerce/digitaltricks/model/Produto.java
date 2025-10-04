@@ -41,7 +41,6 @@ public class Produto {
     }
 
 
-
     // 🔹 Relacionamento com categorias
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -54,6 +53,15 @@ public class Produto {
     // 🔹 Relacionamento com variações
     @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Variacao> variacoes = new ArrayList<>();
+
+    public Produto(String nome, String descricao, Double precoBase, Integer estoque, String imagemUrl) {
+        this.nome = nome;
+        this.descricao = descricao;
+        this.precoBase = precoBase;
+        this.estoque = estoque;
+        this.imagemUrl = imagemUrl;
+    }
+
 
     public Produto() {}
 
@@ -118,14 +126,15 @@ public class Produto {
     }
 
     public void setCategorias(List<Categoria> categorias) {
-        this.categorias = categorias;
+        this.categorias = (categorias != null) ? new ArrayList<>(categorias) : new ArrayList<>();
+    }
+
+    public void setVariacoes(List<Variacao> variacoes) {
+        this.variacoes = (variacoes != null) ? new ArrayList<>(variacoes) : new ArrayList<>();
     }
 
     public List<Variacao> getVariacoes() {
         return variacoes;
     }
 
-    public void setVariacoes(List<Variacao> variacoes) {
-        this.variacoes = variacoes;
-    }
 }

@@ -85,6 +85,15 @@ const Login = () => {
               onChange={(e) => setSenha(e.target.value)}
               required
             />
+          <p className="text-center mt-2 text-sm text-gray-400">
+            Esqueceu sua senha?{" "}
+            <span
+              className="text-amber-400 cursor-pointer hover:underline"
+              onClick={() => navigate("/forgot-password")}
+            >
+              Recuperar
+            </span>
+          </p>
           </div>
 
           <button
@@ -102,6 +111,16 @@ const Login = () => {
               </>
             )}
           </button>
+          <p className="text-center mt-4 text-sm text-gray-400">
+            Não tem conta?{" "}
+            <span
+              className="text-amber-400 cursor-pointer hover:underline"
+              onClick={() => navigate("/register")}
+            >
+              Registre-se
+            </span>
+          </p>
+
         </form>
       </motion.div>
     </section>

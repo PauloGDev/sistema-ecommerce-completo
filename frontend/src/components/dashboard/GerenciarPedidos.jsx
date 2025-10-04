@@ -62,6 +62,7 @@ const atualizarPedido = async () => {
       cpf: form.cpf,
       telefone: form.telefone,
       email: form.email,
+      linkRastreio: form.linkRastreio || "" 
     };
 
     const res = await fetch(

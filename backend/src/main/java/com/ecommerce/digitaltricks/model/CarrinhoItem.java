@@ -15,12 +15,14 @@ public class CarrinhoItem {
     private Produto produto;
 
     private int quantidade;
+    private String imagemUrl;
 
     public CarrinhoItem() {}
 
-    public CarrinhoItem(Produto produto, int quantidade) {
+    public CarrinhoItem(Produto produto, int quantidade,  String imagemUrl) {
         this.produto = produto;
         this.quantidade = quantidade;
+        this.imagemUrl = imagemUrl;
     }
 
     // Getters e setters
@@ -29,4 +31,16 @@ public class CarrinhoItem {
     public void setProduto(Produto produto) { this.produto = produto; }
     public int getQuantidade() { return quantidade; }
     public void setQuantidade(int quantidade) { this.quantidade = quantidade; }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getImagemUrl() {
+        return imagemUrl;
+    }
+
+    public void setImagemUrl(String imagemUrl) {
+        this.imagemUrl = imagemUrl;
+    }
 }

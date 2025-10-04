@@ -1,31 +1,36 @@
 import { useParams, Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PageTitle from "../../context/PageTitle";
-
-import { Swiper, SwiperSlide } from "swiper/react";
-import "swiper/css";
-import "swiper/css/navigation";
-import { Navigation } from "swiper/modules";
-
+import { Loader2 } from "lucide-react";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 import ProdutosRelacionados from "./ProdutosRelacionados";
+import { useCarrinho } from "../../context/CarrinhoContext";
 
 const ProdutoPage = () => {
   const { slug } = useParams();
   const [produto, setProduto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState(-1);
-  const [volumeSelecionado, setVolumeSelecionado] = useState("5mL");
+  const [volumeSelecionado, setVolumeSelecionado] = useState(null);
+  const { adicionarAoCarrinho } = useCarrinho();
+
+    const handleComprar = () => {
+    if (!produto) return;
+
+    const variacao = produto.variacoes?.find((v) => v.nome === volumeSelecionado);
+    adicionarAoCarrinho(produto.id, variacao?.id ?? null, 1);
+  };
 
   useEffect(() => {
     const fetchProduto = async () => {
       try {
+        setLoading(true);
         const res = await fetch(`http://localhost:8080/api/produtos/slug/${slug}`);
         if (!res.ok) throw new Error("Produto não encontrado");
         const data = await res.json();
         setProduto(data);
-        console.log(data)
+        setVolumeSelecionado(data.variacoes?.[0]?.nome ?? null);
       } catch (err) {
         console.error(err);
         setProduto(null);
@@ -36,9 +41,16 @@ const ProdutoPage = () => {
     fetchProduto();
   }, [slug]);
 
+  const precoAtual = useMemo(() => {
+    if (!produto) return null;
+    const variacao = produto.variacoes?.find((v) => v.nome === volumeSelecionado);
+    return variacao?.preco ?? produto.precoBase;
+  }, [produto, volumeSelecionado]);
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[70vh] text-white">
+      <div className="flex justify-center items-center min-h-[70vh] text-gray-300 gap-2">
+        <Loader2 className="animate-spin w-5 h-5" />
         Carregando produto...
       </div>
     );
@@ -59,15 +71,12 @@ const ProdutoPage = () => {
   }
 
   const imagens = [produto.imagemUrl];
-  const precoAtual =
-    produto.variacoes?.find((v) => v.nome === volumeSelecionado)?.preco ||
-    produto.precoBase;
 
   return (
     <>
       <PageTitle title={`${produto.nome} | Sublime Perfumes Fracionados`} />
 
-      <div className="min-h-[80vh] flex flex-col lg:flex-row items-center justify-center gap-12 px-6 sm:px-10 lg:px-20 py-16">
+      <section className="min-h-[80vh] flex flex-col lg:flex-row items-center justify-center gap-12 px-6 sm:px-10 lg:px-20 py-16">
         {/* Imagens */}
         <div className="flex-1 flex justify-center">
           <img
@@ -91,63 +100,62 @@ const ProdutoPage = () => {
                 key={i}
                 className="px-3 py-1 text-sm rounded-full bg-amber-500/20 text-amber-400 uppercase tracking-wide"
               >
-                {cat.nome}
+                {cat.nome ?? cat}
               </span>
             ))}
           </div>
 
-                  {/* Seletor de Variações */}
-        {produto.variacoes?.length > 0 && (
-          <div className="flex justify-center lg:justify-start gap-4 mb-6">
-            {produto.variacoes.map((v) => (
-              <button
-                key={v.id}
-                onClick={() => setVolumeSelecionado(v.nome)}
-                className={`px-4 py-2 rounded-full border transition ${
-                  volumeSelecionado === v.nome
-                    ? "bg-amber-500 text-black border-amber-500"
-                    : "bg-transparent text-white border-gray-500 hover:bg-gray-800"
-                }`}
-              >
-                {v.nome}
-              </button>
-            ))}
-          </div>
-        )}
+          {/* Seletor de Variações */}
+          {produto.variacoes?.length > 0 && (
+            <div className="flex justify-center lg:justify-start gap-4 mb-6">
+              {produto.variacoes.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => setVolumeSelecionado(v.nome)}
+                  aria-pressed={volumeSelecionado === v.nome}
+                  className={`px-4 py-2 rounded-full border transition ${
+                    volumeSelecionado === v.nome
+                      ? "bg-amber-500 text-black border-amber-500"
+                      : "bg-transparent text-white border-gray-500 hover:bg-gray-800"
+                  }`}
+                >
+                  {v.nome}
+                </button>
+              ))}
+            </div>
+          )}
 
-        {/* Preço Atual */}
-        <p className="text-2xl font-bold text-amber-400 mb-6">
-          R$ {precoAtual?.toFixed(2)}
-        </p>
+          {/* Preço */}
+          <p className="text-2xl font-bold text-amber-400 mb-6">
+            R$ {precoAtual?.toFixed(2).replace(".", ",")}
+          </p>
 
-        {/* Descrição do Produto */}
-        <p className="text-gray-300 mb-8 max-w-lg">
-          {produto.descricao}
-        </p>
+          {/* Descrição */}
+          <p className="text-gray-300 mb-8 max-w-lg mx-auto lg:mx-0">
+            {produto.descricao}
+          </p>
 
-        {/* Botão Comprar usando a variação selecionada */}
-        <button className="px-6 py-3 bg-amber-500 text-black font-semibold rounded-full hover:bg-gray-900 hover:text-white transition shadow-lg">
-          Comprar {volumeSelecionado}
-        </button>
+          {/* Comprar */}
+          <button
+        onClick={handleComprar}
+        className="px-6 py-3 bg-amber-500 text-black font-semibold rounded-full hover:bg-gray-900 hover:text-white transition shadow-lg"
+      >
+        Comprar {volumeSelecionado ?? ""}
+      </button>
 
           <div className="mt-6">
-            <Link
-              to="/produtos"
-              className="text-amber-400 hover:text-white transition"
-            >
+            <Link to="/produtos" className="text-amber-400 hover:text-white transition">
               ← Voltar para Produtos
             </Link>
           </div>
         </div>
-      </div>
+      </section>
 
       <ProdutosRelacionados
-  produtoId={produto.id}
-  categoriaId={produto.categorias?.[0]?.id}
-/>
+        produtoId={produto.id}
+        categoriaId={produto.categorias?.[0]?.id}
+      />
 
-
-      {/* Lightbox */}
       <Lightbox
         open={lightboxIndex >= 0}
         close={() => setLightboxIndex(-1)}

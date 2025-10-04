@@ -5,5 +5,6 @@ public record CarrinhoItemDTO(
         String nomeProduto,
         Double precoUnitario,
         Integer quantidade,
-        Double subtotal
+        Double subtotal,
+        String imagemUrl
 ) {}

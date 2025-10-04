@@ -2,6 +2,7 @@ package com.ecommerce.digitaltricks.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -18,7 +19,8 @@ public class Pedido {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "pedido_id")
-    private List<ItemPedido> itens;
+    private List<ItemPedido> itens = new ArrayList<>();
+
 
     @ManyToOne
     @JoinColumn(name = "endereco_id")
@@ -31,9 +33,8 @@ public class Pedido {
     private String telefone;
     private String email;
     private String cpf;
-
-    // 🔹 campo para salvar o ID da sessão Stripe
     private String stripeSessionId;
+    private String linkRastreio;
 
     public Pedido() {}
 
@@ -49,6 +50,10 @@ public class Pedido {
         this.telefone = telefone;
         this.email = email;
     }
+
+    public String getLinkRastreio() { return linkRastreio; }
+    public void setLinkRastreio(String linkRastreio) { this.linkRastreio = linkRastreio; }
+
 
     // Getters e setters
     public Long getId() { return id; }

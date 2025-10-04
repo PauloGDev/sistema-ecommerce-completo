@@ -6,5 +6,6 @@ public record PerfilDTO(
         Long id,
         String nomeCompleto,
         String telefone,
+        String cpf,
         List<EnderecoDTO> enderecos
 ) {}

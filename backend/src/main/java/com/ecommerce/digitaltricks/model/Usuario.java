@@ -20,6 +20,8 @@ public class Usuario {
     @Column(unique = true)
     private String email;
 
+    private String resetToken;
+
     @Enumerated(EnumType.STRING)
     private StatusUsuario status = StatusUsuario.ATIVO;
 
@@ -32,10 +34,11 @@ public class Usuario {
 
     public Usuario() {}
 
-    public Usuario(String username, String password, Set<String> roles) {
+    public Usuario(String username, String password, Set<String> roles, String email) {
         this.username = username;
         this.password = password;
         this.roles = roles;
+        this.email = email;
     }
 
     // Getters e Setters
@@ -52,6 +55,18 @@ public class Usuario {
     public void setStatus(StatusUsuario status) { this.status = status; }
     public Set<String> getRoles() { return roles; }
     public void setRoles(Set<String> roles) { this.roles = roles; }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getResetToken() {
+        return resetToken;
+    }
+
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
+    }
 
     public Perfil getPerfil() { return perfil; }
     public void setPerfil(Perfil perfil) { this.perfil = perfil; }

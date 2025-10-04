@@ -115,6 +115,22 @@ const EditarPedidoModal = ({
               ))}
             </select>
 
+            {/* Link de Rastreio */}
+            <label className="block mb-2">Link de Rastreio</label>
+            <input
+              type="text"
+              value={form.linkRastreio || ""}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  linkRastreio: e.target.value,
+                })
+              }
+              placeholder="https://..."
+              className="w-full p-2 rounded bg-gray-800 text-white mb-3"
+            />
+
+
             {/* Itens */}
             <label className="block mb-2">Itens</label>
             <div className="space-y-3 mb-3">

@@ -2,6 +2,7 @@ package com.ecommerce.digitaltricks.controller;
 
 import com.ecommerce.digitaltricks.dto.ProdutoDTO;
 import com.ecommerce.digitaltricks.dto.VariacaoDTO;
+import com.ecommerce.digitaltricks.model.Categoria;
 import com.ecommerce.digitaltricks.model.Produto;
 import com.ecommerce.digitaltricks.repository.ProdutoRepository;
 import com.ecommerce.digitaltricks.service.ProdutoService;
@@ -34,25 +35,38 @@ public class ProdutoController {
                 p.getId(),
                 p.getNome(),
                 p.getDescricao(),
+                p.getCategorias().stream().map(Categoria::getNome).toList(),
                 p.getPrecoBase(),
                 p.getEstoque(),
                 p.getSlug(),
-                p.getImagemUrl(), // ✅ Agora vai pro front
+                p.getImagemUrl(),
                 p.getVariacoes().stream()
                         .map(v -> new VariacaoDTO(v.getId(), v.getNome(), v.getPreco(), v.getEstoque()))
                         .toList()
         );
     }
 
-    // Criar
-    @PostMapping
-    public Produto criarProduto(@RequestParam String nome,
-                                @RequestParam String descricao,
-                                @RequestParam Double preco,
-                                @RequestParam Integer estoque,
-                                @RequestParam MultipartFile imagem) throws IOException {
-        return produtoService.criarProduto(nome, descricao, preco, estoque, imagem);
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ProdutoDTO criarProduto(
+            @RequestPart("produto") ProdutoDTO produtoDTO,
+            @RequestPart(value = "imagem", required = false) MultipartFile imagem
+    ) {
+        Produto novo = produtoService.criarProduto(produtoDTO, imagem);
+        return new ProdutoDTO(
+                novo.getId(),
+                novo.getNome(),
+                novo.getDescricao(),
+                novo.getCategorias().stream().map(Categoria::getNome).toList(),
+                novo.getPrecoBase(),
+                novo.getEstoque(),
+                novo.getSlug(),
+                novo.getImagemUrl(),
+                novo.getVariacoes().stream()
+                        .map(v -> new VariacaoDTO(v.getId(), v.getNome(), v.getPreco(), v.getEstoque()))
+                        .toList()
+        );
     }
+
 
     // Listar
     @GetMapping
@@ -62,6 +76,7 @@ public class ProdutoController {
                         p.getId(),
                         p.getNome(),
                         p.getDescricao(),
+                        p.getCategorias().stream().map(Categoria::getNome).toList(),
                         p.getPrecoBase(),
                         p.getEstoque(),
                         p.getSlug(),
@@ -74,13 +89,28 @@ public class ProdutoController {
     }
 
     @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
-    public Produto atualizarProduto(
+    public ProdutoDTO atualizarProduto(
             @PathVariable Long id,
             @RequestPart("produto") ProdutoDTO produtoDTO,
             @RequestPart(value = "imagem", required = false) MultipartFile imagem
     ) {
-        return produtoService.atualizarProduto(id, produtoDTO, imagem);
+        Produto atualizado = produtoService.atualizarProduto(id, produtoDTO, imagem);
+
+        return new ProdutoDTO(
+                atualizado.getId(),
+                atualizado.getNome(),
+                atualizado.getDescricao(),
+                atualizado.getCategorias().stream().map(Categoria::getNome).toList(),
+                atualizado.getPrecoBase(),
+                atualizado.getEstoque(),
+                atualizado.getSlug(),
+                atualizado.getImagemUrl(),
+                atualizado.getVariacoes().stream()
+                        .map(v -> new VariacaoDTO(v.getId(), v.getNome(), v.getPreco(), v.getEstoque()))
+                        .toList()
+        );
     }
+
 
     // Excluir
     @DeleteMapping("/{id}")
@@ -98,6 +128,7 @@ public class ProdutoController {
                 p.getId(),
                 p.getNome(),
                 p.getDescricao(),
+                p.getCategorias().stream().map(Categoria::getNome).toList(),
                 p.getPrecoBase(),
                 p.getEstoque(),
                 p.getSlug(),

@@ -5,6 +5,8 @@ import { useNotification } from "../../../context/NotificationContext";
 
 const EditProductModal = ({ produto, onClose, onSaved }) => {
   const { showNotification } = useNotification();
+  const [novaCategoria, setNovaCategoria] = useState("");
+
 
 const [formData, setFormData] = useState({
   nome: produto.nome || "",
@@ -260,23 +262,50 @@ const handleSave = async () => {
           </div>
 
           {/* Categorias */}
-          <div>
-            <label className="block text-sm font-medium mb-2 text-gray-200">
-              Categorias
-            </label>
-            <input
-              type="text"
-              value={(formData.categorias || []).join(", ")}
-              onChange={(e) =>
-                handleChange(
-                  "categorias",
-                  e.target.value ? e.target.value.split(",").map((c) => c.trim()) : []
-                )
-              }
-              className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm placeholder:text-gray-400"
-              placeholder="Ex: Moda, Masculino"
-            />
-          </div>
+          <div className="flex flex-wrap gap-2">
+  {formData.categorias.map((cat, i) => (
+    <span
+      key={i}
+      className="flex items-center gap-1 bg-gray-700 px-2 py-1 rounded-lg text-sm"
+    >
+      {cat}
+      <button
+        type="button"
+        onClick={() => {
+          const novas = formData.categorias.filter((_, idx) => idx !== i);
+          handleChange("categorias", novas);
+        }}
+        className="text-red-400 hover:text-red-200"
+      >
+        <Trash className="w-3 h-3" />
+      </button>
+    </span>
+  ))}
+</div>
+
+<div className="flex gap-2">
+  <input
+    type="text"
+    value={novaCategoria}
+    onChange={(e) => setNovaCategoria(e.target.value)}
+    placeholder="Adicionar categoria"
+    className="flex-1 bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2 text-sm placeholder:text-gray-400"
+  />
+  <button
+    type="button"
+    onClick={() => {
+      if (novaCategoria.trim() !== "") {
+        handleChange("categorias", [...formData.categorias, novaCategoria.trim()]);
+        setNovaCategoria(""); // limpa campo
+      }
+    }}
+    className="px-3 py-2 rounded-lg bg-emerald-500 text-black hover:bg-emerald-400 transition"
+  >
+    Enviar
+  </button>
+</div>
+
+
         </div>
 
         {/* Footer */}

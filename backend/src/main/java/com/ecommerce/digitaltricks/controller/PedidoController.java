@@ -1,14 +1,12 @@
 package com.ecommerce.digitaltricks.controller;
 
-import com.ecommerce.digitaltricks.dto.EnderecoDTO;
-import com.ecommerce.digitaltricks.dto.ItemPedidoDTO;
-import com.ecommerce.digitaltricks.dto.PedidoDTO;
-import com.ecommerce.digitaltricks.dto.PedidoRequestDTO;
+import com.ecommerce.digitaltricks.dto.*;
 import com.ecommerce.digitaltricks.model.*;
 import com.ecommerce.digitaltricks.repository.PedidoRepository;
 import com.ecommerce.digitaltricks.repository.ProdutoRepository;
 import com.ecommerce.digitaltricks.repository.UsuarioRepository;
 import com.ecommerce.digitaltricks.service.CheckoutService;
+import com.ecommerce.digitaltricks.service.ProdutoService;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.springframework.data.domain.Page;
@@ -32,14 +30,16 @@ public class PedidoController {
     private final UsuarioRepository usuarioRepository;
     private final CheckoutService checkoutService;
     private final ProdutoRepository produtoRepository;
+    private final ProdutoService produtoService;
 
     public PedidoController(PedidoRepository pedidoRepository,
                             UsuarioRepository usuarioRepository,
-                            CheckoutService checkoutService, ProdutoRepository produtoRepository) {
+                            CheckoutService checkoutService, ProdutoRepository produtoRepository, ProdutoService produtoService) {
         this.pedidoRepository = pedidoRepository;
         this.usuarioRepository = usuarioRepository;
         this.checkoutService = checkoutService;
         this.produtoRepository = produtoRepository;
+        this.produtoService = produtoService;
     }
 
     @PostMapping
@@ -57,16 +57,18 @@ public class PedidoController {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Endereço inválido"));
 
-        // 🔹 buscar produtos e montar os itens
+        // buscar produtos e montar os itens
         List<ItemPedido> itens = pedidoRequest.itens().stream()
                 .map(i -> {
                     Produto produto = produtoRepository.findById(i.produtoId())
                             .orElseThrow(() -> new RuntimeException("Produto não encontrado: " + i.produtoId()));
 
                     return new ItemPedido(
+                            produto,
                             produto.getNome(),
                             i.quantidade(),
-                            produto.getPrecoBase()
+                            produto.getPrecoBase(),
+                            produto.getImagemUrl()
                     );
                 })
                 .toList();
@@ -107,11 +109,23 @@ public class PedidoController {
 
         Pedido salvo = pedidoRepository.save(pedido);
 
+            int i = 0;
+        for (ItemPedido item : pedido.getItens()) {
+            int finalI = i;
+            Produto produto = produtoRepository.findById(item.getProdutoId())
+                    .orElseThrow(() -> new RuntimeException("Produto não encontrado: " + pedido.getItens().get(finalI).getProdutoId()));
+            produto.setEstoque(produto.getEstoque() - item.getQuantidade());
+            i += 1;
+            produtoRepository.save(produto);
+
+        }
+
+
         return ResponseEntity.ok(toDTO(salvo));
     }
 
 
-    // 🔹 Usuário comum vê apenas seus pedidos
+    // Usuário comum vê apenas seus pedidos
     @GetMapping("/me")
     public ResponseEntity<List<PedidoDTO>> listarMeusPedidos(@AuthenticationPrincipal UserDetails userDetails) {
         Usuario usuario = usuarioRepository.findByUsername(userDetails.getUsername())
@@ -123,7 +137,7 @@ public class PedidoController {
         return ResponseEntity.ok(dtos);
     }
 
-    // 🔹 Admin: listar todos pedidos (paginado, com filtro opcional de status)
+    // Admin: listar todos pedidos (paginado, com filtro opcional de status)
     @GetMapping
     public ResponseEntity<Page<PedidoDTO>> listarTodos(
             @RequestParam(defaultValue = "0") int page,
@@ -135,54 +149,32 @@ public class PedidoController {
         return ResponseEntity.ok(dtos);
     }
 
-    // 🔹 Admin pode atualizar status
-    @PutMapping("/{id}/status")
-    public ResponseEntity<PedidoDTO> atualizarStatus(
-            @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
-        Pedido pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
-
-        pedido.setStatus(body.get("status"));
-        Pedido atualizado = pedidoRepository.save(pedido);
-
-        return ResponseEntity.ok(toDTO(atualizado));
-    }
-
-    // 🔹 Admin pode atualizar dados do pedido
     @PutMapping("/{id}")
     public ResponseEntity<PedidoDTO> atualizarPedido(
             @PathVariable Long id,
-            @RequestBody Pedido pedidoAtualizado) {
+            @RequestBody PedidoUpdateDTO dto) {
 
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
-        // Atualizar campos simples
-        pedido.setUsuario(pedidoAtualizado.getUsuario());
-        pedido.setTotal(pedidoAtualizado.getTotal());
-        pedido.setStatus(pedidoAtualizado.getStatus());
-        pedido.setEnderecoEntrega(pedidoAtualizado.getEnderecoEntrega());
-        pedido.setNomeCompleto(pedidoAtualizado.getNomeCompleto());
-        pedido.setCpf(pedidoAtualizado.getCpf());
-        pedido.setTelefone(pedidoAtualizado.getTelefone());
-        pedido.setEmail(pedidoAtualizado.getEmail());
+        String statusAnterior = pedido.getStatus(); // guarda o status anterior
 
-        // ✅ Atualizar itens corretamente
-        pedido.getItens().clear();
-        if (pedidoAtualizado.getItens() != null) {
-            for (ItemPedido item : pedidoAtualizado.getItens()) {
-                pedido.getItens().add(item);
-            }
-        }
+        if (dto.total() != null) pedido.setTotal(dto.total());
+        if (dto.status() != null) pedido.setStatus(dto.status());
+        if (dto.nomeCompleto() != null) pedido.setNomeCompleto(dto.nomeCompleto());
+        if (dto.enderecoEntrega() != null) pedido.setEnderecoEntrega(dto.enderecoEntrega());
+        if (dto.cpf() != null) pedido.setCpf(dto.cpf());
+        if (dto.telefone() != null) pedido.setTelefone(dto.telefone());
+        if (dto.email() != null) pedido.setEmail(dto.email());
+        if (dto.linkRastreio() != null) pedido.setLinkRastreio(dto.linkRastreio());
 
+        // ⚙️ Atualizar estoque conforme status
+        produtoService.atualizarProduto(pedido, statusAnterior, pedido.getStatus());
         Pedido salvo = pedidoRepository.save(pedido);
-
         return ResponseEntity.ok(toDTO(salvo));
     }
 
 
-    // 🔹 Converte entidade → DTO
     private PedidoDTO toDTO(Pedido pedido) {
         return new PedidoDTO(
                 pedido.getId(),
@@ -201,17 +193,29 @@ public class PedidoController {
                 ) : null,
                 pedido.getItens().stream()
                         .map(i -> new ItemPedidoDTO(
+                                i.getId(),
                                 i.getNomeProduto(),
                                 i.getQuantidade(),
-                                i.getPrecoUnitario()
+                                i.getPrecoUnitario(),
+                                i.getImagemUrl()
                         ))
-                        .collect(Collectors.toList()),
+                        .toList(),
                 pedido.getNomeCompleto(),
                 pedido.getCpf(),
                 pedido.getTelefone(),
-                pedido.getEmail()
+                pedido.getEmail(),
+                pedido.getUsuario() != null ? new UsuarioDTO(
+                        pedido.getUsuario().getId(),
+                        pedido.getUsuario().getUsername(),
+                        pedido.getUsuario().getNome(),
+                        pedido.getUsuario().getEmail(),
+                        pedido.getUsuario().getStatus(),
+                        pedido.getUsuario().getRoles()
+                ) : null,
+                pedido.getLinkRastreio() // devolve o link de rastreio
         );
     }
+
 
     @PostMapping("/{id}/checkout")
     public ResponseEntity<Map<String, Object>> iniciarCheckout(
@@ -225,7 +229,7 @@ public class PedidoController {
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
 
         if (!pedido.getUsuario().getId().equals(usuario.getId())) {
-            return ResponseEntity.status(403).build(); // ❌ se o pedido não for do usuário logado
+            return ResponseEntity.status(403).build(); // se o pedido não for do usuário logado
         }
 
         // Se já existir uma sessão Stripe para esse pedido, reutiliza
@@ -260,7 +264,7 @@ public class PedidoController {
 
         Session session = Session.create(params);
 
-// 🔹 salvar id da sessão Stripe no pedido (para reaproveitar depois)
+// salvar id da sessão Stripe no pedido (para reaproveitar depois)
         pedido.setStripeSessionId(session.getId());
         pedidoRepository.save(pedido);
 
@@ -271,4 +275,6 @@ public class PedidoController {
         return ResponseEntity.ok(response);
 
     }
+
+
 }

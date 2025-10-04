@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNotification } from "../../context/NotificationContext";
+import { Star, X, PlusCircle, Save } from "lucide-react";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: { opacity: 1, y: 0, transition: { duration: 0.4 } },
 };
 
-// Mapeia os campos técnicos -> labels amigáveis
 const labels = {
   logradouro: "Rua",
   numero: "Número",
@@ -89,10 +89,10 @@ const AddressSelector = ({ onSelect }) => {
       setEnderecos(novosEnderecos);
       setEnderecoSelecionado(enderecoAtualizado);
       onSelect(enderecoAtualizado);
-      showNotification("✅ Endereço definido como padrão!", "success");
+      showNotification("Endereço definido como padrão!", "success");
     } catch (err) {
       console.error(err);
-      showNotification("❌ Erro ao definir endereço padrão.", "error");
+      showNotification("Erro ao definir endereço padrão.", "error");
     }
   };
 
@@ -117,7 +117,7 @@ const AddressSelector = ({ onSelect }) => {
       setEnderecoSelecionado(enderecoSalvo);
       onSelect(enderecoSalvo);
 
-      showNotification("✅ Endereço adicionado com sucesso!", "success");
+      showNotification("Endereço adicionado com sucesso!", "success");
       setAdicionando(false);
       setNovoEndereco({
         logradouro: "",
@@ -129,7 +129,7 @@ const AddressSelector = ({ onSelect }) => {
       });
     } catch (err) {
       console.error(err);
-      showNotification("❌ Erro ao adicionar endereço.", "error");
+      showNotification("Erro ao adicionar endereço.", "error");
     }
   };
 
@@ -164,8 +164,8 @@ const AddressSelector = ({ onSelect }) => {
 
               <div className="mt-3 flex justify-between items-center">
                 {endereco.padrao ? (
-                  <span className="text-xs px-2 py-0.5 rounded bg-amber-500 text-black font-semibold">
-                    ⭐ Padrão
+                  <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-amber-500 text-black font-semibold">
+                    <Star size={14} className="fill-black" /> Padrão
                   </span>
                 ) : (
                   <button
@@ -189,7 +189,15 @@ const AddressSelector = ({ onSelect }) => {
         onClick={() => setAdicionando(!adicionando)}
         className="mt-6 flex items-center gap-2 px-4 py-2 bg-amber-500 text-black font-semibold rounded-lg shadow hover:bg-amber-600 transition"
       >
-        {adicionando ? "✖ Cancelar" : "➕ Adicionar Novo Endereço"}
+        {adicionando ? (
+          <>
+            <X size={18} /> Cancelar
+          </>
+        ) : (
+          <>
+            <PlusCircle size={18} /> Adicionar Novo Endereço
+          </>
+        )}
       </button>
 
       {/* Formulário de novo endereço */}
@@ -213,9 +221,9 @@ const AddressSelector = ({ onSelect }) => {
           ))}
           <button
             onClick={handleSalvarEndereco}
-            className="w-full py-2 bg-amber-500 text-black font-semibold rounded-lg hover:bg-amber-600 transition"
+            className="w-full flex items-center justify-center gap-2 py-2 bg-amber-500 text-black font-semibold rounded-lg hover:bg-amber-600 transition"
           >
-            💾 Salvar Endereço
+            <Save size={18} /> Salvar Endereço
           </button>
         </div>
       )}

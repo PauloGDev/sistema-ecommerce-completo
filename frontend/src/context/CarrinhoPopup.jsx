@@ -73,7 +73,7 @@ const { carrinho, removerDoCarrinho } = useCarrinho();
     >
       <div className="flex items-center gap-2">
         <img
-          src={`/imagens/produtos/${item.produtoId}.jpg`}
+          src={item.imagemUrl}
           alt={item.nomeProduto}
           className="w-12 h-12 object-contain rounded"
         />

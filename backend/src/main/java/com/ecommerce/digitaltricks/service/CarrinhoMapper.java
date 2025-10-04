@@ -29,7 +29,8 @@ public class CarrinhoMapper {
                 item.getProduto().getNome(),
                 item.getProduto().getPrecoBase(),
                 item.getQuantidade(),
-                item.getProduto().getPrecoBase() * item.getQuantidade()
+                item.getProduto().getPrecoBase() * item.getQuantidade(),
+                item.getImagemUrl()
         );
     }
 }

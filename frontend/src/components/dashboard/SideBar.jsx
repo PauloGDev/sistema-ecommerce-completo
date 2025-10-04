@@ -50,8 +50,8 @@ const Sidebar = ({ section, changeSection, sidebarOpen }) => {
   return (
     <aside
       className={`
-        fixed md:static inset-y-0 left-0 z-40 w-64 p-6 
-        bg-white/5 border-r border-white/10 backdrop-blur-md 
+        fixed md:static inset-y-0 left-0 z-20 w-64 p-6 
+        bg-gray-800 border-r border-white/10 
         transform transition-transform duration-300
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0

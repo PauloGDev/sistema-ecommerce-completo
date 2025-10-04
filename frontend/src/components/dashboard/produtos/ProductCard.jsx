@@ -1,15 +1,17 @@
 // src/components/dashboard/produtos/ProductCard.jsx
 import { useState, useMemo } from "react";
-import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Eye } from "lucide-react";
 import EditProductModal from "./EditProductModal";
 import { useNotification } from "../../../context/NotificationContext";
 import DeleteConfirmModal from "./DeleteConfirmModal";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const ProductCard = ({ produto, onChange }) => {
   const [editing, setEditing] = useState(false);
   const { showNotification } = useNotification();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showVariacoes, setShowVariacoes] = useState(false);
+  const navigate = useNavigate();
 
   // 🔹 Calcula estoque total e preço
   const { estoqueTotal, precoExibido } = useMemo(() => {
@@ -54,10 +56,24 @@ const ProductCard = ({ produto, onChange }) => {
         <img
           src={produto.imagemUrl}
           alt={produto.nome}
-          className="w-full h-40 object-cover rounded-xl mb-4"
+          className="w-full h-40 object-contain rounded-xl mb-4"
         />
         <h3 className="text-lg font-semibold truncate">{produto.nome}</h3>
         <p className="text-gray-400 text-sm line-clamp-2">{produto.descricao}</p>
+
+        {/* 🔹 Categorias */}
+        {produto.categorias && produto.categorias.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {produto.categorias.map((cat, i) => (
+              <span
+                key={i}
+                className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full"
+              >
+                {typeof cat === "string" ? cat : cat.nome}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* 🔹 Preço (se tiver variação mostra "a partir de") */}
         <p className="mt-2 font-bold">
@@ -135,16 +151,29 @@ const ProductCard = ({ produto, onChange }) => {
           </div>
         )}
 
-        {/* 🔹 Botão excluir separado (não propaga clique) */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation(); // impede abrir edição
-            setConfirmDelete(true);
-          }}
-          className="mt-4 bg-red-500 text-white py-2 rounded-lg hover:bg-red-400 transition flex items-center justify-center gap-1"
-        >
-          <Trash2 className="w-4 h-4" /> Excluir
-        </button>
+         <div className="inline-flex">
+          {/* 🔹 Botão Preview (vai para página do produto) */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/produtos/${produto.slug}`);
+            }}
+            className="mt-4 w-1/2 mx-2 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-400 transition flex items-center justify-center gap-1"
+          >
+            <Eye className="w-4 h-4" /> Ver Página
+          </button>
+
+          {/* 🔹 Botão excluir */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setConfirmDelete(true);
+            }}
+            className="mt-4 w-1/2 mx-2 bg-red-500 text-white py-2 rounded-lg hover:bg-red-400 transition flex items-center justify-center gap-1"
+          >
+            <Trash2 className="w-4 h-4" /> Excluir
+          </button>
+        </div>
       </div>
 
       {/* 🔹 Confirmação de exclusão */}

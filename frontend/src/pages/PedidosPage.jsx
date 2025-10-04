@@ -2,7 +2,17 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import PageTitle from "../context/PageTitle";
-import { Search, ChevronLeft, ChevronRight, CreditCard } from "lucide-react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
+  Truck,
+  Package,
+  Calendar,
+  AlertCircle,
+  Clock,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const fadeUp = {
@@ -18,6 +28,14 @@ const statusColors = {
   CANCELADO: "bg-red-500 text-white",
 };
 
+const statusIcons = {
+  PENDENTE: <Clock size={14} />,
+  PAGO: <CreditCard size={14} />,
+  ENVIADO: <Truck size={14} />,
+  ENTREGUE: <Package size={14} />,
+  CANCELADO: <AlertCircle size={14} />,
+};
+
 const PedidosPage = () => {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +44,16 @@ const PedidosPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const navigate = useNavigate();
+
+  const isValidUrl = (url) => {
+  try {
+    new URL(url.startsWith("http") ? url : `https://${url}`);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -51,7 +79,6 @@ const PedidosPage = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Filtragem e pesquisa
   const pedidosFiltrados = useMemo(() => {
     return pedidos.filter((pedido) => {
       const matchSearch =
@@ -65,7 +92,6 @@ const PedidosPage = () => {
     });
   }, [pedidos, search, statusFilter]);
 
-  // Paginação
   const totalPages = Math.ceil(pedidosFiltrados.length / itemsPerPage);
   const pedidosPaginados = pedidosFiltrados.slice(
     (currentPage - 1) * itemsPerPage,
@@ -80,12 +106,12 @@ const PedidosPage = () => {
           initial="hidden"
           animate="show"
           variants={fadeUp}
-          className="text-3xl font-bold text-white mb-8"
+          className="text-3xl font-bold text-white mb-8 flex items-center gap-2"
         >
-          Meus Pedidos
+          <Package size={28} className="text-amber-400" /> Meus Pedidos
         </motion.h1>
 
-        {/* 🔎 Barra de pesquisa e filtro */}
+        {/* Barra de pesquisa e filtro */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           <div className="flex items-center bg-gray-800 rounded-lg px-3 py-2 flex-1">
             <Search size={18} className="text-gray-400 mr-2" />
@@ -133,25 +159,26 @@ const PedidosPage = () => {
                 initial="hidden"
                 animate="show"
                 transition={{ delay: i * 0.1 }}
-                className="border border-gray-700 rounded-lg bg-gradient-to-br from-black via-gray-900 to-black shadow-md p-5"
+                className="border border-gray-700 rounded-xl bg-gradient-to-br from-black via-gray-900 to-black shadow-lg p-5"
               >
                 {/* Cabeçalho */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-white">
+                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Package size={18} className="text-amber-400" />
                       Pedido #{pedido.id}
                     </h2>
-                    <p className="text-sm text-gray-400">
-                      📅 {new Date(pedido.data).toLocaleString()}
+                    <p className="text-sm text-gray-400 flex items-center gap-1">
+                      <Calendar size={14} />{" "}
+                      {new Date(pedido.data).toLocaleString()}
                     </p>
                   </div>
                   <span
-                    className={`px-3 py-1 text-xs font-semibold rounded-full mt-2 sm:mt-0 ${
-                      statusColors[pedido.status] ||
-                      "bg-gray-500 text-white"
+                    className={`flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full mt-2 sm:mt-0 ${
+                      statusColors[pedido.status] || "bg-gray-500 text-white"
                     }`}
                   >
-                    {pedido.status}
+                    {statusIcons[pedido.status]} {pedido.status}
                   </span>
                 </div>
 
@@ -162,12 +189,17 @@ const PedidosPage = () => {
                       key={`${pedido.id}-${idx}`}
                       className="flex justify-between items-center py-2"
                     >
-                      <div>
-                        <p className="text-white text-sm">{item.nomeProduto}</p>
-                        <p className="text-xs text-gray-400">
-                          {item.quantidade}x R${" "}
-                          {item.precoUnitario.toFixed(2)}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        <Package size={16} className="text-gray-400" />
+                        <div>
+                          <p className="text-white text-sm">
+                            {item.nomeProduto}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {item.quantidade}x R${" "}
+                            {item.precoUnitario.toFixed(2)}
+                          </p>
+                        </div>
                       </div>
                       <span className="text-amber-400 font-bold">
                         R${" "}
@@ -178,7 +210,7 @@ const PedidosPage = () => {
                 </div>
 
                 {/* Total + Ações */}
-                <div className="flex justify-between items-center border-t border-gray-700 mt-4 pt-3">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center border-t border-gray-700 mt-4 pt-3 gap-3">
                   <span className="font-semibold text-white">Total:</span>
                   <div className="flex items-center gap-3">
                     <span className="text-amber-400 font-bold text-lg">
@@ -195,6 +227,28 @@ const PedidosPage = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Rastreio */}
+              <div className="mt-4">
+                {isValidUrl(pedido.linkRastreio) ? (
+                  <a
+                    href={pedido.linkRastreio.startsWith("http")
+                      ? pedido.linkRastreio
+                      : `https://${pedido.linkRastreio}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500 text-white font-medium shadow-md hover:shadow-lg hover:scale-[1.02] transition transform"
+                  >
+                    <Truck className="w-4 h-4 group-hover:animate-pulse" />
+                    <span>Acompanhar entrega</span>
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-gray-400 bg-gray-800/40 px-3 py-2 rounded-lg">
+                    <Truck size={16} /> <span>Aguarde, seu pedido ainda não foi enviado.</span>
+                  </div>
+                )}
+              </div>
+
               </motion.div>
             ))}
 

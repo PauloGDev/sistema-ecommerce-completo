@@ -59,9 +59,11 @@ public class CheckoutService {
                             .orElseThrow(() -> new RuntimeException("Produto não encontrado: " + i.getProduto().getId()));
 
                     return new ItemPedido(
+                            produto,
                             produto.getNome(),
                             i.getQuantidade(),
-                            produto.getPrecoBase() // garante preço atualizado do banco
+                            produto.getPrecoBase(),
+                            produto.getImagemUrl()
                     );
                 })
                 .collect(Collectors.toList());

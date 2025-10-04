@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { assets } from "../assets/assets";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { User } from "lucide-react"; // Ícone de perfil
+import { User, LogOut, X } from "lucide-react";
 
 const parseJwt = (token) => {
   try {
@@ -12,18 +12,17 @@ const parseJwt = (token) => {
 };
 
 const Navbar = () => {
-  const [visible, setVisible] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [role, setRole] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const location = useLocation();
   const navigate = useNavigate();
 
   // Detecta scroll
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -34,11 +33,11 @@ const Navbar = () => {
     if (token) {
       const decoded = parseJwt(token);
       const userRoles = decoded?.roles || [];
-      if (Array.isArray(userRoles) && userRoles.includes("ROLE_ADMIN")) {
-        setRole("ADMIN");
-      } else {
-        setRole("USER");
-      }
+      setRole(
+        Array.isArray(userRoles) && userRoles.includes("ROLE_ADMIN")
+          ? "ADMIN"
+          : "USER"
+      );
     } else {
       setRole(null);
     }
@@ -51,61 +50,67 @@ const Navbar = () => {
     navigate("/login");
   };
 
-  // Função para verificar se o link está ativo
   const isActive = (path) => location.pathname === path;
 
-  // 🔹 Navbar normal (cliente/visitante)
+  const links = [
+    { label: "Produtos", path: "/produtos" },
+    { label: "Sobre", path: "/sobre" },
+    { label: "Contato", path: "/#contato", anchor: true },
+  ];
+
   return (
-    <div
-      id="navbar"
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ease-in-out 
-      ${scrolled ? "bg-gray-950 shadow-md py-3" : "bg-transparent py-6"}`}
+    <header
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 
+      ${scrolled ? "bg-gray-950/95 shadow-md py-3" : "bg-transparent py-5"}`}
     >
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between font-medium">
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
         <Link to="/">
-          <img src={assets.logo} className="w-32 lg:w-44" alt="Sublime Perfumes" />
+          <img
+            src={assets.logo}
+            className="w-32 md:w-40 lg:w-44"
+            alt="Sublime Perfumes"
+          />
         </Link>
 
-        {/* Menu desktop - sempre aparece, inclusive para ADMIN */}
-<ul className="sm:flex gap-10 text-sm items-center hidden font-medium text-white">
-  <div className="flex flex-col items-center">
-    <Link
-      to="/produtos"
-      className={`hover:text-gray-400 ${isActive("/produtos") ? "text-amber-400" : ""}`}
-    >
-      Produtos
-    </Link>
-  </div>
-  <div className="flex flex-col items-center">
-    <Link
-      to="/sobre"
-      className={`hover:text-gray-400 ${isActive("/sobre") ? "text-amber-400" : ""}`}
-    >
-      Sobre
-    </Link>
-  </div>
-  <div className="flex flex-col items-center">
-    <a href="/#contato" className="hover:text-gray-400">
-      Contato
-    </a>
-  </div>
-</ul>
+        {/* Links - Desktop */}
+        <nav className="hidden md:flex gap-8 text-sm font-medium text-white">
+          {links.map((link) =>
+            link.anchor ? (
+              <a
+                key={link.label}
+                href={link.path}
+                className="hover:text-gray-400 transition-colors"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.label}
+                to={link.path}
+                className={`hover:text-gray-400 transition-colors ${
+                  isActive(link.path) ? "text-amber-400" : ""
+                }`}
+              >
+                {link.label}
+              </Link>
+            )
+          )}
+        </nav>
 
-
-        {/* Ícone Perfil/Login */}
-        <div className="relative">
+        {/* Ações (login/perfil) */}
+        <div className="flex items-center gap-4">
           {role ? (
-            <>
+            <div className="relative">
               <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-600 text-black"
+                onClick={() => setDropdownOpen((prev) => !prev)}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-600 text-black transition"
               >
                 <User size={20} />
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2 text-sm z-50">
+                <div className="absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden text-sm z-50">
                   {role === "USER" && (
                     <>
                       <Link
@@ -160,59 +165,81 @@ const Navbar = () => {
 
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                    className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-gray-100"
                   >
-                    Sair
+                    <LogOut size={16} /> Sair
                   </button>
                 </div>
               )}
-            </>
+            </div>
           ) : (
             <Link
               to="/login"
-              className="bg-amber-500 hover:bg-amber-600 px-4 py-2 rounded-lg font-medium text-black"
+              className="bg-amber-500 hover:bg-amber-600 px-4 py-2 rounded-lg font-medium text-black transition"
             >
               Fazer Login
             </Link>
           )}
-        </div>
 
-        {/* Botão hambúrguer - mobile */}
-        <button
-          onClick={() => setVisible(!visible)}
-          className="sm:hidden flex flex-col justify-center items-center w-8 h-8 relative"
-        >
-          <span
-            className={`block absolute h-0.5 w-6 bg-white transform transition duration-500 ease-in-out 
-            ${visible ? "rotate-45 translate-y-0.5" : "-translate-y-1.5"}`}
-          />
-          <span
-            className={`block absolute h-0.5 w-6 bg-white transition duration-500 ease-in-out 
-            ${visible ? "opacity-0" : "opacity-100"}`}
-          />
-          <span
-            className={`block absolute h-0.5 w-6 bg-white transform transition duration-500 ease-in-out 
-            ${visible ? "-rotate-45 -translate-y-0.5" : "translate-y-1.5"}`}
-          />
-        </button>
+          {/* Botão Menu Mobile */}
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="md:hidden flex flex-col justify-center items-center w-8 h-8 relative"
+          >
+            <span className="block h-0.5 w-6 bg-white mb-1" />
+            <span className="block h-0.5 w-6 bg-white mb-1" />
+            <span className="block h-0.5 w-6 bg-white" />
+          </button>
+        </div>
       </div>
 
-      {/* Menu mobile */}
-      {visible && (
-  <div className="absolute top-full right-0 w-full bg-gray-950 shadow-lg p-6 flex flex-col gap-4 text-sm font-medium sm:hidden z-40 text-white">
-    <Link to="/produtos" onClick={() => setVisible(false)} className={isActive("/produtos") ? "text-amber-400" : "hover:text-gray-400"}>
-      Produtos
-    </Link>
-    <Link to="/sobre" onClick={() => setVisible(false)} className={isActive("/sobre") ? "text-amber-400" : "hover:text-gray-400"}>
-      Sobre
-    </Link>
-    <a href="/#contato" onClick={() => setVisible(false)} className="hover:text-gray-400">
-      Contato
-    </a>
-  </div>
-)}
+      {/* Overlay + Sidebar Mobile */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-40">
+          {/* Overlay */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setMenuOpen(false)}
+          />
 
-    </div>
+          {/* Sidebar */}
+          <div className="absolute top-0 right-0 w-64 h-full bg-gray-950 shadow-lg p-6 flex flex-col gap-6 text-white animate-slide-in">
+            <button
+              className="self-end text-gray-400 hover:text-white"
+              onClick={() => setMenuOpen(false)}
+            >
+              <X size={24} />
+            </button>
+
+            {links.map((link) =>
+              link.anchor ? (
+                <a
+                  key={link.label}
+                  href={link.path}
+                  onClick={() => setMenuOpen(false)}
+                  className={`hover:text-amber-400 transition-colors ${
+                    isActive(link.path) ? "text-amber-400" : ""
+                  }`}
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.label}
+                  to={link.path}
+                  onClick={() => setMenuOpen(false)}
+                  className={`hover:text-amber-400 transition-colors ${
+                    isActive(link.path) ? "text-amber-400" : ""
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
+          </div>
+        </div>
+      )}
+    </header>
   );
 };
 

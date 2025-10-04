@@ -56,7 +56,7 @@ public class Carrinho {
                 return;
             }
         }
-        itens.add(new CarrinhoItem(produto, quantidade));
+        itens.add(new CarrinhoItem(produto, quantidade, produto.getImagemUrl()));
         calcularTotal();
     }
 

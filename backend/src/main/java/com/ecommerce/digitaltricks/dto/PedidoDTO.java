@@ -13,5 +13,7 @@ public record PedidoDTO(
         String nomeCompleto,
         String cpf,
         String telefone,
-        String email
+        String email,
+        UsuarioDTO usuarioDTO,
+        String linkRastreio
 ) {}

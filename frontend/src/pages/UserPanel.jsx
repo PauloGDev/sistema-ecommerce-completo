@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
-import { User, LogOut, Package, Mail, Shield } from "lucide-react";
+import { User, LogOut, Package, Mail, Edit, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import EditarPerfilModal from "./painel-usuario/EditarPerfilModal";
 
 const UserPanel = () => {
   const [perfil, setPerfil] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    carregarPerfil();
+  }, [navigate]);
+
+  const carregarPerfil = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
@@ -21,14 +27,30 @@ const UserPanel = () => {
         return res.json();
       })
       .then((data) => {
-        console.log("Perfil carregado:", data);
         setPerfil(data);
       })
       .catch(() => {
         localStorage.removeItem("token");
         navigate("/login");
       });
-  }, [navigate]);
+  };
+
+  const handleSave = (perfilAtualizado) => {
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:8080/api/perfis/me", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(perfilAtualizado),
+    })
+      .then((res) => res.json())
+      .then(() => {
+        setModalOpen(false);
+        carregarPerfil();
+      });
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -37,7 +59,28 @@ const UserPanel = () => {
 
   if (!perfil) {
     return (
-      <div className="text-center text-gray-400 py-20">Carregando perfil...</div>
+      <section className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <div className="bg-white/10 p-8 rounded-2xl text-center max-w-md">
+          <User className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Perfil não encontrado</h2>
+          <p className="text-gray-400 mb-4">
+            Você ainda não configurou seu perfil. Complete suas informações para continuar.
+          </p>
+          <button
+            onClick={() => setModalOpen(true)}
+            className="px-6 py-3 rounded-xl bg-amber-500 text-white font-semibold hover:bg-amber-400 transition"
+          >
+            Criar meu perfil
+          </button>
+        </div>
+
+        <EditarPerfilModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          perfilAtual={perfil}
+          onSave={handleSave}
+        />
+      </section>
     );
   }
 
@@ -45,17 +88,27 @@ const UserPanel = () => {
     <section className="min-h-screen bg-gray-900 text-white flex items-center justify-center px-6 py-12">
       <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl shadow-xl p-8 w-full max-w-3xl space-y-8">
         {/* Cabeçalho */}
-        <div className="flex items-center gap-4">
-          <User className="w-14 h-14 text-amber-400" />
-          <div>
-            <h2 className="text-2xl font-bold">
-              Olá, {perfil.nomeCompleto || perfil.username}!
-            </h2>
-            <p className="text-amber-400">Telefone: {perfil.telefone || "-"}</p>
-            <p className="text-sm text-gray-300 flex items-center gap-2">
-              <Mail className="w-4 h-4" /> {perfil.email}
-            </p>
+        <div className="flex items-center gap-4 justify-between">
+          <div className="flex items-center gap-4">
+            <User className="w-14 h-14 text-amber-400" />
+            <div>
+              <h2 className="text-2xl font-bold">
+                Olá, {perfil.nomeCompleto || perfil.username}!
+              </h2>
+              <p className="text-amber-400">Telefone: {perfil.telefone || "-"}</p>
+              <p className="text-sm text-gray-300 flex items-center gap-2">
+                <Mail className="w-4 h-4" /> {perfil.email}
+              </p>
+            </div>
           </div>
+
+          {/* Botão Editar */}
+          <button
+            onClick={() => setModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 transition"
+          >
+            <Edit className="w-4 h-4" /> Editar
+          </button>
         </div>
 
         {/* Endereços */}
@@ -63,9 +116,10 @@ const UserPanel = () => {
           <h3 className="text-lg font-semibold text-amber-400">Meus Endereços</h3>
           {perfil.enderecos?.length > 0 ? (
             perfil.enderecos.map((end, i) => (
-              <p key={end.id || i}>
+              <p key={end.id || i} className="flex items-center gap-2">
                 {end.logradouro}, {end.numero} - {end.cidade}/{end.estado} ({end.cep})
-                {end.padrao && " ⭐"}
+                {end.padrao && <Star className="w-4 h-4 text-amber-400" />}
+                
               </p>
             ))
           ) : (
@@ -90,6 +144,14 @@ const UserPanel = () => {
           </button>
         </div>
       </div>
+
+      {/* Modal Editar Perfil */}
+      <EditarPerfilModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        perfilAtual={perfil}
+        onSave={handleSave}
+      />
     </section>
   );
 };
