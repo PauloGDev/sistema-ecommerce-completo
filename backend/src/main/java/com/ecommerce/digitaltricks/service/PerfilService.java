@@ -37,6 +37,7 @@ public class PerfilService {
                                 e.getEstado(),
                                 e.getCep(),
                                 e.getCidade(),
+                                e.getComplemento(),
                                 e.isPadrao()
                         ))
                         .toList()
@@ -66,6 +67,7 @@ public class PerfilService {
     public UsuarioPerfilDTO toUsuarioPerfilDTO(Usuario usuario, Perfil perfil) {
         return new UsuarioPerfilDTO(
                 usuario.getId(),
+                usuario.getPerfil().getId(),
                 usuario.getUsername(),
                 usuario.getNome(),
                 usuario.getEmail(),
@@ -84,6 +86,7 @@ public class PerfilService {
                                 e.getEstado(),
                                 e.getCep(),
                                 e.getCidade(),
+                                e.getComplemento(),
                                 e.isPadrao()
                         )).toList()
                         : List.of()

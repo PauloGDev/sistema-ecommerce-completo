@@ -26,47 +26,65 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> {}) // 🔑 habilita o CorsFilter do CorsConfig
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .cors(cors -> {}) // Ativa o CorsConfig definido separadamente
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                // Controle de acesso por rota
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**","/api/stripe/webhook/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        .requestMatchers(HttpMethod.GET, "/api/produtos/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/produtos/mais-vendidos").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/produtos/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/produtos/destaque-por-categoria").permitAll()
+                        .requestMatchers("/api/melhorenvio/**").permitAll()
+
                         .requestMatchers(HttpMethod.POST, "/api/checkout").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/checkout/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/carrinho/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/produtos/**").permitAll()
 
-                        // 🔐 Somente admins podem gerenciar produtos e usuários
-                        .requestMatchers(HttpMethod.GET, "/api/pedidos/me").hasAnyRole("USER","ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/perfis/me").hasAnyRole("USER","ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/perfis/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/perfis/me**").hasAnyRole("USER","ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/pedidos/**").hasAnyRole("USER","ADMIN")
-                        .requestMatchers("/api/pedidos/**").hasRole("ADMIN")
-                        .requestMatchers("/api/produtos/**").hasRole("ADMIN")
-                        .requestMatchers("/api/usuarios/**").hasRole("ADMIN" )
-                        .requestMatchers("/api/usuarios/me").hasAnyRole("USER","ADMIN")
-
-                        // 🔐 Usuários logados podem acessar o carrinho
+                        .requestMatchers(HttpMethod.POST, "/api/pedidos/criar/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/enderecos/me").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/pedidos/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/perfis/me").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/perfis/me**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/payment/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/carrinho/**").hasAnyRole("USER", "ADMIN")
 
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/produtos/**").hasRole("ADMIN")
+                        .requestMatchers("/api/pedidos/**").hasRole("ADMIN")
+                        .requestMatchers("/api/categorias/**").hasRole("ADMIN")
+                        .requestMatchers("/api/payment/**").hasAnyRole( "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/perfis/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
+                // Filtro JWT antes do UsernamePasswordAuthenticationFilter
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
+    // 🔐 Encoder de senhas
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    // ⚙️ AuthenticationManager (necessário para login manual via AuthController)
     @Bean
-    public AuthenticationManager authManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 }

@@ -13,6 +13,7 @@ const Register = () => {
   const [cpf, setCpf] = useState("");
   const [telefone, setTelefone] = useState("");
   const [enderecos, setEnderecos] = useState([]);
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState("");
@@ -53,7 +54,7 @@ const Register = () => {
       setLoading(true);
       setMensagem("");
 
-      const res = await fetch("http://localhost:8080/api/auth/register", {
+      const res = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

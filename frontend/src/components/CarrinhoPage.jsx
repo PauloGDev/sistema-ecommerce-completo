@@ -1,4 +1,3 @@
-// src/pages/CarrinhoPage.jsx
 import { motion } from "framer-motion";
 import PageTitle from "../context/PageTitle";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +7,6 @@ import { useState, useMemo, useEffect } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { AlertTriangle, Hourglass, Loader2, MinusCircle, PlusCircle, Trash2 } from "lucide-react";
 
-// Components
 import CarrinhoLista from "../components/carrinho/CarrinhoLista";
 import EnderecoEntregaBox from "../components/carrinho/EnderecoEntregaBox";
 import DadosClienteForm from "../components/carrinho/DadosClienteForm";
@@ -42,15 +40,17 @@ if (!usuarioId) {
   return;
 }
 
-
-  // Endereço
-  const [enderecoEntrega, setEnderecoEntrega] = useState(null);
+  const API_URL = import.meta.env.VITE_API_URL;
+   const [fretes, setFretes] = useState([]);
+const [freteSelecionado, setFreteSelecionado] = useState(null);
+const [enderecoEntrega, setEnderecoEntrega] = useState(null);
 
   // Dados do cliente
   const [nomeCompleto, setNomeCompleto] = useState("");
   const [cpf, setCpf] = useState("");
   const [telefone, setTelefone] = useState("");
   const [email, setEmail] = useState("");
+  const [perfilId, setPerfilId] = useState("");
 
   // Backup vindo do usuário logado
   const [usuarioData, setUsuarioData] = useState({});
@@ -66,10 +66,9 @@ if (!usuarioId) {
   useEffect(() => {
     const fetchUsuario = async () => {
       const token = localStorage.getItem("token");
-      if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:8080/api/usuarios/me", {
+        const res = await fetch(`${API_URL}/perfis/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -79,6 +78,8 @@ if (!usuarioId) {
           setEmail(data.email || "");
           setNomeCompleto(data.nomeCompleto || "");
           setUsuarioData(data);
+          setPerfilId(data.perfilId)
+          console.log(data)
         }
       } catch (err) {
         console.error("Erro ao carregar usuário:", err);
@@ -97,83 +98,104 @@ if (!usuarioId) {
     [carrinho]
   );
 
-  const stripePromise = loadStripe("pk_test_51SC4XyFbXZ2pkRLwnxYuyQ3L1lzXrALcqAZpIjNvIR1DB8aNrjZJJmHR3W1tl8ZuwGvB8yUk9vTgjYXjqb0ICdrP00t3onuoFq");
+  const totalComFrete = useMemo(() => {
+  const subtotal = carrinho.itens?.reduce(
+    (sum, item) => sum + (item?.precoUnitario || 0) * item.quantidade,
+    0
+  ) || 0;
+  const valorFrete = freteSelecionado ? parseFloat(freteSelecionado.price) : 0;
+  return subtotal + valorFrete;
+}, [carrinho, freteSelecionado]);
 
-  const handlePagamento = async () => {
-    setPagando(true);
-    const token = localStorage.getItem("token");
 
-    if (!enderecoEntrega) {
-      showNotification("⚠️ Selecione um endereço antes de pagar.", "warning");
+  const stripePromise = loadStripe(
+    "pk_test_51SGP7P47TnSmtIZzpq8a2ryG0EqF9QEneZsSPtd9JEEkBwqkHvmN9FvSghLqRMfh9Cly1NfI36Ef7BWmeeB9IGlt00XSKBwrrh"
+  );
+
+  function validarCPF(cpf) {
+  cpf = cpf.replace(/[^\d]+/g, "");
+  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+
+  let soma = 0;
+  for (let i = 0; i < 9; i++) soma += parseInt(cpf.charAt(i)) * (10 - i);
+  let resto = 11 - (soma % 11);
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(cpf.charAt(9))) return false;
+
+  soma = 0;
+  for (let i = 0; i < 10; i++) soma += parseInt(cpf.charAt(i)) * (11 - i);
+  resto = 11 - (soma % 11);
+  if (resto === 10 || resto === 11) resto = 0;
+  return resto === parseInt(cpf.charAt(10));
+}
+
+
+const handlePagamento = async () => {
+  setPagando(true);
+  const token = localStorage.getItem("token");
+
+  if (!enderecoEntrega) {
+    showNotification("Selecione um endereço antes de pagar.", "warning");
+    setPagando(false);
+    return;
+  }
+  if (!validarCPF(cpf)) {
+  showNotification("CPF inválido. Verifique e tente novamente.", "error");
+  setPagando(false);
+  return;
+}
+
+  try {
+    const pedido = {
+      itens: carrinho.itens.map((i) => ({
+        produtoId: i.produtoId,
+        nomeProduto: i.nomeProduto,
+        quantidade: i.quantidade,
+        precoUnitario: i.precoUnitario,
+      })),
+      total,
+      enderecoId: enderecoEntrega.id,
+      nomeCompleto,
+      cpf,
+      telefone: editarTelefone ? telefone : usuarioData.telefone || telefone || "",
+      email: editarEmail ? email : usuarioData.email || email || "",
+    };
+
+    const pedidoRes = await fetch(`${API_URL}/pedidos/criar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(pedido),
+    });
+
+    // 🚨 Se deu erro
+    if (!pedidoRes.ok) {
+      const errorText = await pedidoRes.text();
+      if (errorText.includes("CPF inválido")) {
+        showNotification("CPF inválido. Verifique os dados e tente novamente.", "error");
+      } else {
+        showNotification("Erro ao criar pedido.", "error");
+      }
       setPagando(false);
       return;
     }
-    if (!cpf || !nomeCompleto) {
-      showNotification("⚠️ Nome completo e CPF são obrigatórios.", "warning");
-      setPagando(false);
-      return;
-    }
 
-    try {
-      // 1️⃣ Cria o pedido
-      const pedido = {
-        itens: carrinho.itens.map((i) => ({
-          produtoId: i.produtoId,
-          quantidade: i.quantidade,
-          precoUnitario: i.precoUnitario,
-        })),
-        total,
-        enderecoId: enderecoEntrega.id,
-        nomeCompleto,
-        cpf,
-        telefone: editarTelefone ? telefone : usuarioData.telefone || telefone || "",
-        email: editarEmail ? email : usuarioData.email || email || "",
-      };
+    // ✅ Se deu certo
+    const pedidoData = await pedidoRes.json();
+    limparCarrinho();
+    navigate("/checkout", { state: { total, pedidoId: pedidoData.id } });
 
-      const pedidoRes = await fetch("http://localhost:8080/api/pedidos", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(pedido),
-      });
+  } catch (err) {
+    console.error("Erro no pagamento:", err);
+    showNotification("Erro inesperado.", "error");
+    setPagando(false);
+  }
+};
 
-      if (!pedidoRes.ok) {
-        showNotification("❌ Erro ao criar pedido.", "error");
-        setPagando(false);
-        return;
-      }
 
-      const pedidoData = await pedidoRes.json();
 
-      // 2️⃣ Inicia checkout Stripe
-      const checkoutRes = await fetch(
-        `http://localhost:8080/api/pedidos/${pedidoData.id}/checkout`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      const checkoutData = await checkoutRes.json();
-      if (checkoutData.error) {
-        showNotification("❌ Erro ao iniciar pagamento.", "error");
-        setPagando(false);
-        return;
-      }
-
-      const stripe = await stripePromise;
-      limparCarrinho();
-      await stripe.redirectToCheckout({ sessionId: checkoutData.id });
-    } catch (err) {
-      console.error("Erro no pagamento:", err);
-      showNotification("❌ Erro inesperado.", "error");
-      setPagando(false);
-    }
-  };
-
-  // 🔥 Tela de carregamento full-screen
   if (pagando) {
     return (
       <motion.div
@@ -211,26 +233,78 @@ if (!usuarioId) {
   }
 
   if (!carrinho || carrinho.itens?.length === 0) {
-    return (
-      <div className="max-w-4xl mx-auto py-20 text-center">
-        <PageTitle title="Carrinho | Sublime Perfumes Fracionados" />
-        <motion.h1
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-2xl font-bold mb-6"
+  return (
+    <div className="min-h-[80vh] flex flex-col items-center justify-center bg-gray-950 text-white">
+      <PageTitle title="Carrinho | Sublime Perfumes Fracionados" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="flex flex-col items-center text-center"
+      >
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
+          className="bg-gray-900/80 border border-gray-800 rounded-full p-6 mb-6 shadow-lg"
         >
-          🛒 Seu carrinho está vazio
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-14 h-14 text-amber-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.293 2.707A1 1 0 007.618 17h8.764a1 1 0 00.911-1.293L16 13M7 13V6h13"
+            />
+          </svg>
+        </motion.div>
+
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="text-2xl md:text-3xl font-bold mb-3"
+        >
+          Seu carrinho está vazio
         </motion.h1>
-      </div>
-    );
-  }
+
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="text-gray-400 mb-8 max-w-md"
+        >
+          Parece que você ainda não adicionou nenhum perfume. Explore nossa coleção e encontre o aroma perfeito para você.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.8 }}
+        >
+          <button
+            onClick={() => navigate("/produtos")}
+            className="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-black font-semibold rounded-lg shadow-md transition-all duration-300 hover:scale-[1.03]"
+          >
+            Ver Produtos
+          </button>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
 
   return (
     <div>
       <PageTitle title="Carrinho | Sublime Perfumes Fracionados" />
-      <div className="px-3 sm:px-[5vw] md:px-[2vw] lg:px-[9vw] py-16 max-w-5xl mx-auto">
+      <div className="pt-20 px-3 sm:px-[5vw] md:px-[2vw] lg:px-[9vw] py-16 max-w-5xl mx-auto">
         {/* Título */}
         <motion.h1
           initial={{ opacity: 0, y: 40 }}
@@ -261,7 +335,45 @@ if (!usuarioId) {
         />
 
         {/* Endereço */}
-        <EnderecoEntregaBox fadeUp={fadeUp} onSelect={setEnderecoEntrega} />
+        <EnderecoEntregaBox fadeUp={fadeUp} onSelect={setEnderecoEntrega} perfilId={perfilId} />
+
+        {fretes.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-6 bg-gray-800 p-4 rounded-xl border border-gray-700"
+          >
+            <h3 className="text-lg font-semibold text-gray-200 mb-3">Opções de Frete</h3>
+            <div className="flex flex-col gap-2">
+              {fretes.map((f) => (
+                <label
+                  key={f.id}
+                  className={`p-3 rounded-lg cursor-pointer border transition ${
+                    freteSelecionado?.id === f.id
+                      ? "border-amber-500 bg-gray-700"
+                      : "border-gray-700 hover:bg-gray-700/50"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="frete"
+                    className="mr-2 accent-amber-500"
+                    checked={freteSelecionado?.id === f.id}
+                    onChange={() => setFreteSelecionado(f)}
+                  />
+                  <span className="text-gray-300 font-medium">{f.name}</span>
+                  <span className="ml-3 text-amber-400 font-semibold">
+                    R$ {f.price.replace(".", ",")}
+                  </span>
+                  <span className="ml-3 text-sm text-gray-400">
+                    {f.delivery_time} dias úteis
+                  </span>
+                </label>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
 
         {/* Dados do Cliente */}
         <DadosClienteForm
@@ -281,8 +393,7 @@ if (!usuarioId) {
           setEditarEmail={setEditarEmail}
         />
 
-        {/* Resumo */}
-        <ResumoCarrinho fadeUp={fadeUp} total={total} handlePagamento={handlePagamento} />
+        <ResumoCarrinho fadeUp={fadeUp} total={totalComFrete} handlePagamento={handlePagamento} />
       </div>
     </div>
   );

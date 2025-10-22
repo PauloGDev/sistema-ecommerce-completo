@@ -1,46 +1,70 @@
 // src/components/dashboard/produtos/ProductCard.jsx
 import { useState, useMemo } from "react";
-import { Trash2, ChevronDown, ChevronUp, Eye } from "lucide-react";
+import {
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  PackageX,
+  EyeOff,
+  RefreshCcw,
+} from "lucide-react";
 import EditProductModal from "./EditProductModal";
 import { useNotification } from "../../../context/NotificationContext";
 import DeleteConfirmModal from "./DeleteConfirmModal";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const ProductCard = ({ produto, onChange }) => {
+const ProductCard = ({ produto, onChange, onProdutoAtualizado }) => {
   const [editing, setEditing] = useState(false);
   const { showNotification } = useNotification();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showVariacoes, setShowVariacoes] = useState(false);
   const navigate = useNavigate();
 
-  // 🔹 Calcula estoque total e preço
-  const { estoqueTotal, precoExibido } = useMemo(() => {
+  // 🔹 Cálculos de estoque e preço
+  const { estoqueTotal, precoExibido, esgotadas } = useMemo(() => {
     if (produto.variacoes && produto.variacoes.length > 0) {
       const estoque = produto.variacoes.reduce(
         (acc, v) => acc + (v.estoque || 0),
         0
       );
       const menorPreco = Math.min(...produto.variacoes.map((v) => v.preco));
-      return { estoqueTotal: estoque, precoExibido: menorPreco };
+      const esgotadas = produto.variacoes.filter((v) => v.estoque <= 0).length;
+      return { estoqueTotal: estoque, precoExibido: menorPreco, esgotadas };
     }
-    return { estoqueTotal: produto.estoque ?? 0, precoExibido: produto.precoBase };
+    return {
+      estoqueTotal: produto.estoque ?? 0,
+      precoExibido: produto.precoBase,
+      esgotadas: 0,
+    };
   }, [produto]);
 
-  const handleDelete = async (id) => {
+  // 🔸 Alterna entre ativo/inativo
+  const handleToggleAtivo = async (id, novoStatus) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:8080/api/produtos/${id}`, {
+      const res = await fetch(`${API_URL}/produtos/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ativo: novoStatus }),
       });
 
-      if (!res.ok) throw new Error("Erro ao excluir produto");
+      if (!res.ok) throw new Error("Erro ao atualizar status do produto");
 
-      showNotification("✅ Produto excluído com sucesso!", "success");
+      showNotification(
+        novoStatus
+          ? "✅ Produto reativado com sucesso!"
+          : "🛑 Produto desativado com sucesso!",
+        "success"
+      );
+
       onChange();
     } catch (err) {
-      console.error("Erro ao excluir:", err);
-      showNotification("❌ Não foi possível excluir o produto", "error");
+      console.error("Erro ao atualizar status:", err);
+      showNotification("❌ Não foi possível atualizar o status do produto", "error");
     } finally {
       setConfirmDelete(false);
     }
@@ -48,17 +72,35 @@ const ProductCard = ({ produto, onChange }) => {
 
   return (
     <>
-      {/* 🔹 Card inteiro abre o modal de edição */}
       <div
-        onClick={() => setEditing(true)}
-        className="bg-white/10 border border-white/10 rounded-2xl p-6 flex flex-col hover:scale-[1.01] transition cursor-pointer"
+        onClick={() => produto.ativo && setEditing(true)}
+        className={`relative bg-white/10 border border-white/10 rounded-2xl p-6 flex flex-col transition cursor-pointer 
+          hover:border-amber-400/30 hover:shadow-lg hover:shadow-amber-500/5
+          ${!produto.ativo ? "" : ""}`}
       >
-        <img
-          src={produto.imagemUrl}
-          alt={produto.nome}
-          className="w-full h-40 object-contain rounded-xl mb-4"
-        />
-        <h3 className="text-lg font-semibold truncate">{produto.nome}</h3>
+        {!produto.ativo && (
+          <div className="z-20 absolute self-center justify-center bg-red-600/80 text-white text-xs px-6 py-3 rounded-md flex items-center gap-1">
+            <EyeOff size={14} /> Inativo
+          </div>
+        )}
+
+        {/* 🔹 Imagem */}
+        <div className="relative w-full h-40 mb-4 bg-gray-800 rounded-xl flex items-center justify-center overflow-hidden">
+          {produto.imagemUrl ? (
+            <img
+              src={produto.imagemUrl}
+              alt={produto.nome}
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <PackageX className="w-10 h-10 text-gray-600" />
+          )}
+        </div>
+
+        {/* 🔹 Nome e descrição */}
+        <h3 className="text-lg font-semibold text-gray-100 truncate">
+          {produto.nome}
+        </h3>
         <p className="text-gray-400 text-sm line-clamp-2">{produto.descricao}</p>
 
         {/* 🔹 Categorias */}
@@ -75,8 +117,8 @@ const ProductCard = ({ produto, onChange }) => {
           </div>
         )}
 
-        {/* 🔹 Preço (se tiver variação mostra "a partir de") */}
-        <p className="mt-2 font-bold">
+        {/* 🔹 Preço */}
+        <p className="mt-2 font-semibold text-amber-400">
           {produto.variacoes && produto.variacoes.length > 0
             ? `A partir de ${new Intl.NumberFormat("pt-BR", {
                 style: "currency",
@@ -101,8 +143,9 @@ const ProductCard = ({ produto, onChange }) => {
             : "Esgotado"}
         </span>
 
-          {/* 🔹 Mostrar/Ocultar variações */}
-          {produto.variacoes && produto.variacoes.length > 0 && (
+        {/* 🔸 Variações */}
+        {produto.variacoes && produto.variacoes.length > 0 && (
+          <>
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -110,8 +153,7 @@ const ProductCard = ({ produto, onChange }) => {
               }}
               className="mt-3 flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition"
             >
-              {/* 🔹 Badge com quantidade */}
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs">
+              <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs">
                 {produto.variacoes.length}
               </span>
               {showVariacoes ? (
@@ -123,78 +165,119 @@ const ProductCard = ({ produto, onChange }) => {
                   Mostrar variações <ChevronDown size={16} />
                 </>
               )}
-
             </button>
-          )}
 
-        {/* 🔹 Lista de variações expandida */}
-        {showVariacoes && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="mt-3 space-y-2 bg-black/20 rounded-lg p-3"
-          >
-            {produto.variacoes.map((v) => (
+            {showVariacoes && (
               <div
-                key={v.id}
-                className="flex justify-between items-center text-sm border-b border-white/10 pb-1 last:border-0"
+                onClick={(e) => e.stopPropagation()}
+                className="mt-3 space-y-2 bg-black/20 rounded-lg p-3 border border-white/10"
               >
-                <span>{v.nome}</span>
-                <span className="font-medium">
-                  {new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(v.preco)}{" "}
-                  ({v.estoque} un.)
-                </span>
+                {produto.variacoes.map((v) => (
+                  <div
+                    key={v.id}
+                    className="flex justify-between items-center text-sm border-b border-white/10 pb-1 last:border-0"
+                  >
+                    <span className="flex items-center gap-2">
+                      {v.nome}
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          v.estoque > 5
+                            ? "bg-green-400"
+                            : v.estoque > 0
+                            ? "bg-yellow-400"
+                            : "bg-red-500"
+                        }`}
+                      ></span>
+                    </span>
+                    <span className="font-medium text-gray-200">
+                      {new Intl.NumberFormat("pt-BR", {
+                        style: "currency",
+                        currency: "BRL",
+                      }).format(v.preco)}{" "}
+                      ({v.estoque} un.)
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
 
-         <div className="inline-flex">
-          {/* 🔹 Botão Preview (vai para página do produto) */}
+        {/* 🔹 Botões */}
+        <div className="flex gap-3 mt-4">
           <button
             onClick={(e) => {
               e.stopPropagation();
               navigate(`/produtos/${produto.slug}`);
             }}
-            className="mt-4 w-1/2 mx-2 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-400 transition flex items-center justify-center gap-1"
+            disabled={!produto.ativo}
+            className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1 transition ${
+              produto.ativo
+                ? "bg-blue-600 hover:bg-blue-500 text-white"
+                : "bg-gray-700 text-gray-400 cursor-not-allowed"
+            }`}
           >
-            <Eye className="w-4 h-4" /> Ver Página
+            <Eye size={16} /> Ver Página
           </button>
 
-          {/* 🔹 Botão excluir */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               setConfirmDelete(true);
             }}
-            className="mt-4 w-1/2 mx-2 bg-red-500 text-white py-2 rounded-lg hover:bg-red-400 transition flex items-center justify-center gap-1"
+            className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1 transition ${
+              produto.ativo
+                ? "bg-red-600 hover:bg-red-500"
+                : "bg-green-600 hover:bg-green-500"
+            } text-white`}
           >
-            <Trash2 className="w-4 h-4" /> Excluir
+            {produto.ativo ? (
+              <>
+                <Trash2 size={16} /> Desativar
+              </>
+            ) : (
+              <>
+                <RefreshCcw size={16} /> Reativar
+              </>
+            )}
           </button>
         </div>
       </div>
 
-      {/* 🔹 Confirmação de exclusão */}
+      {/* 🔹 Modal de confirmação */}
       <DeleteConfirmModal
         isOpen={confirmDelete}
         onClose={() => setConfirmDelete(false)}
-        onConfirm={() => handleDelete(produto.id)}
+        onConfirm={() => handleToggleAtivo(produto.id, !produto.ativo)}
+        title={
+          produto.ativo ? "Desativar produto?" : "Reativar produto?"
+        }
+        message={
+          produto.ativo
+            ? "O produto será marcado como inativo, mas continuará salvo no sistema."
+            : "O produto será reativado e voltará a aparecer na loja."
+        }
+        isReativando={!produto.ativo}
       />
 
-      {/* 🔹 Modal de edição */}
-      {editing && (
+
+      {editing && produto.ativo && (
         <EditProductModal
           produto={produto}
           onClose={() => setEditing(false)}
-          onSaved={() => {
-            onChange();
-            showNotification("✅ Produto atualizado com sucesso!", "success");
+          onSaved={(produtoAtualizado) => {
+            if (produtoAtualizado) {
+              // ✅ Atualiza apenas o item alterado
+              if (typeof onProdutoAtualizado === "function") {
+                onProdutoAtualizado(produtoAtualizado);
+              }
+              showNotification("✅ Produto atualizado com sucesso!", "success");
+            }
             setEditing(false);
           }}
         />
       )}
+
     </>
   );
 };

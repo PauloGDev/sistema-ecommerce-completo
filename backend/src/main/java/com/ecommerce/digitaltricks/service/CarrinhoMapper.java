@@ -24,13 +24,26 @@ public class CarrinhoMapper {
     }
 
     private CarrinhoItemDTO toItemDTO(CarrinhoItem item) {
+        String nome = item.getVariacao() != null
+                ? item.getProduto().getNome() + " - " + item.getVariacao().getNome()
+                : item.getProduto().getNome();
+
+        Double preco = item.getVariacao() != null
+                ? item.getVariacao().getPreco()
+                : item.getProduto().getPrecoBase();
+
+        String imagemUrl = null;
+        if (item.getProduto().getImagemUrl() != null) {
+            imagemUrl = item.getProduto().getImagemUrl();
+        }
+
         return new CarrinhoItemDTO(
                 item.getProduto().getId(),
-                item.getProduto().getNome(),
-                item.getProduto().getPrecoBase(),
+                nome,
+                preco,
                 item.getQuantidade(),
-                item.getProduto().getPrecoBase() * item.getQuantidade(),
-                item.getImagemUrl()
+                preco * item.getQuantidade(),
+                imagemUrl
         );
     }
 }

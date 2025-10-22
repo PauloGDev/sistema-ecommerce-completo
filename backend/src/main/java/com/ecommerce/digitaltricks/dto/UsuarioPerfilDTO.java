@@ -6,6 +6,7 @@ import com.ecommerce.digitaltricks.model.StatusUsuario;
 
 public record UsuarioPerfilDTO(
         Long id,
+        Long perfilId,
         String username,
         String nome,
         String email,

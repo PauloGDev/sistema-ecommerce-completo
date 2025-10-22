@@ -17,6 +17,17 @@ public class ItemPedido {
     private int quantidade;
     private double precoUnitario;
     private String imagemUrl;
+    @ManyToOne
+    @JoinColumn(name = "variacao_id")
+    private Variacao variacao;
+
+    public Variacao getVariacao() {
+        return variacao;
+    }
+
+    public void setVariacao(Variacao variacao) {
+        this.variacao = variacao;
+    }
 
     public ItemPedido() {}
 

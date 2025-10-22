@@ -38,7 +38,7 @@ export default function CtaFinal() {
           className="flex flex-col sm:flex-row justify-center items-center gap-4"
         >
           <a
-            href="https://wa.me/PHONE_NUMBER"
+            href="https://wa.me/5585984642900"
             className="px-8 py-4 rounded-full bg-amber-400 text-black font-semibold shadow-lg hover:bg-gray-900 hover:text-gray-400 transition"
           >
             Pedir Agora no WhatsApp
@@ -51,9 +51,9 @@ export default function CtaFinal() {
           </Link>
         </motion.div>
 
-        {/* Extra: selo de confiança */}
+        {/* Selo de confiança sem emojis */}
         <div className="pt-6 text-sm text-gray-400">
-          ✅ Produtos originais &nbsp; • &nbsp; 🚚 Entrega discreta & rápida &nbsp; • &nbsp; ⭐ Atendimento exclusivo
+          Produtos 100% originais &nbsp; • &nbsp; Entrega discreta e rápida &nbsp; • &nbsp; Atendimento exclusivo
         </div>
       </div>
     </section>

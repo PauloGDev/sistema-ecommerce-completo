@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 const CarrinhoContext = createContext();
 
-const API = "http://localhost:8080/api/carrinho";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const defaultOptions = (method = "GET") => ({
   method,
@@ -22,7 +22,7 @@ export const CarrinhoProvider = ({ children }) => {
 const carregarCarrinho = async () => {
   try {
     const usuarioId = localStorage.getItem("usuarioId"); // exemplo
-    const response = await fetch(`${API}?usuarioId=${usuarioId}`, defaultOptions());
+    const response = await fetch(`${API_URL}/carrinho?usuarioId=${usuarioId}`, defaultOptions());
     if (response.ok) {
       const data = await response.json();
       setCarrinho(data);
@@ -37,7 +37,7 @@ const limparCarrinho = async () => {
   try {
     const usuarioId = localStorage.getItem("usuarioId");
     const response = await fetch(
-      `${API}/limpar?usuarioId=${usuarioId}`,
+      `${API_URL}/carrinho/limpar?usuarioId=${usuarioId}`,
       defaultOptions("POST")
     );
     if (response.ok) {
@@ -49,12 +49,25 @@ const limparCarrinho = async () => {
   }
 };
 
+async function adicionarAoCarrinho(produtoId, variacaoId, quantidade = 1, precoUnitario) {
+  const usuarioId = localStorage.getItem("usuarioId");
+  const response = await fetch(`${API_URL}/carrinho/adicionar`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ usuarioId, produtoId, variacaoId, quantidade, precoUnitario }),
+  });
 
-const incrementarItem = async (produtoId) => {
+  if (response.ok) {
+    const data = await response.json();
+    setCarrinho(data);
+  }
+}
+
+const incrementarItem = async (produtoId, precoUnitario) => {
   try {
     const usuarioId = localStorage.getItem("usuarioId");
     const response = await fetch(
-      `${API}/adicionar?usuarioId=${usuarioId}&produtoId=${produtoId}`,
+      `${API_URL}/carrinho/aumentar?usuarioId=${usuarioId}&produtoId=${produtoId}&precoUnitario=${precoUnitario}`,
       defaultOptions("POST")
     );
     if (response.ok) {
@@ -66,11 +79,11 @@ const incrementarItem = async (produtoId) => {
   }
 };
 
-const decrementarItem = async (produtoId) => {
+const decrementarItem = async (produtoId, precoUnitario) => {
   try {
     const usuarioId = localStorage.getItem("usuarioId");
     const response = await fetch(
-      `${API}/diminuir?usuarioId=${usuarioId}&produtoId=${produtoId}`,
+      `${API_URL}/carrinho/diminuir?usuarioId=${usuarioId}&produtoId=${produtoId}&precoUnitario=${precoUnitario}`,
       defaultOptions("POST")
     );
     if (response.ok) {
@@ -82,29 +95,11 @@ const decrementarItem = async (produtoId) => {
   }
 };
 
-const adicionarAoCarrinho = async (produtoId, variacaoId = null, quantidade = 1) => {
-  try {
-    const usuarioId = localStorage.getItem("usuarioId");
-    const url = `${API}/adicionar?usuarioId=${usuarioId}&produtoId=${produtoId}&quantidade=${quantidade}${
-      variacaoId ? `&variacaoId=${variacaoId}` : ""
-    }`;
-
-    const response = await fetch(url, defaultOptions("POST"));
-    if (response.ok) {
-      const data = await response.json();
-      setCarrinho(data);
-    }
-  } catch (err) {
-    console.error("Erro ao adicionar item:", err);
-  }
-};
-
-
   const removerDoCarrinho = async (produtoId) => {
     try {
       const usuarioId = localStorage.getItem("usuarioId");
       const response = await fetch(
-        `${API}/remover/${produtoId}?usuarioId=${usuarioId}`,
+        `${API_URL}/carrinho/remover/${produtoId}?usuarioId=${usuarioId}`,
         defaultOptions("DELETE")
       );
       if (response.ok) {

@@ -3,10 +3,10 @@ import Hero from '../components/Hero'
 import SecaoSobre from '../components/SecaoSobre'
 import TitleB from '../components/TitleB'
 import GridProdutos from '../components/GridProdutos'
-import ProdutosDestaque from '../components/ProdutosDestaque'
 import CtaFinal from '../components/CTA'
 import PageTitle from '../context/PageTitle'
 import CarrosselCategoria from '../components/CarrosselCategoria'
+import ProdutosDestaque from '../components/Produtos/ProdutosDestaque'
 
 const Home = () => {
   // Variantes de animação para reutilizar
@@ -19,27 +19,7 @@ const Home = () => {
     <div id='inicio'>
       <PageTitle title={"Sublime | Perfumes Fracionados"}/>
       <Hero/>
-
-        {/* Sobre */}
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          <SecaoSobre />
-        </motion.div>
       <div className="px-3 sm:px-6 lg:px-12 max-w-7xl mx-auto">
-
-        {/* Produtos Em Destaque */}
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          <ProdutosDestaque />
-        </motion.div>
 
          {/* Produtos */}
         <motion.section
@@ -51,7 +31,7 @@ const Home = () => {
           viewport={{ once: true, amount: 0.2 }}
         >
           <TitleB 
-            link={'https://wa.me/5585999560003?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20os%20servi%C3%A7os%20da%20AR%20Studio!'} 
+            link={'https://wa.me/5585984642900'} 
             text1={"Nossos Perfumes"} 
             text2={"Explore vários aromas."} 
             text3={"Fale Conosco"}
@@ -68,11 +48,10 @@ const Home = () => {
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
         >
-          <CarrosselCategoria categoria="Masculino" title="Masculinos em destaque" />
-          <CarrosselCategoria categoria="Feminino" title="Femininos em destaque" />
-          <CarrosselCategoria categoria="Árabe" title="Aromas Árabes" />
+          <CarrosselCategoria categoria="Masculinos" title="Masculinos em destaque" />
+          <CarrosselCategoria categoria="Femininos" title="Femininos em destaque" />
+          <CarrosselCategoria categoria="Árabes" title="Árabes em destaque" />
         </motion.section>
-    
 
       </div>
         {/* CTA */}

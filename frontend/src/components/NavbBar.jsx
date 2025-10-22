@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { assets } from "../assets/assets";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { User, LogOut, X } from "lucide-react";
@@ -19,6 +19,8 @@ const Navbar = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const sidebarRef = useRef(null);
+  const dropdownRef = useRef(null); // ⬅️ Novo ref para o dropdown
 
   // Detecta scroll
   useEffect(() => {
@@ -26,6 +28,30 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Fecha menu se clicar fora
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handleClickOutside = (e) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [menuOpen]);
+
+  // Fecha dropdown se clicar fora
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownOpen]);
 
   // Pega role do token
   useEffect(() => {
@@ -55,7 +81,7 @@ const Navbar = () => {
   const links = [
     { label: "Produtos", path: "/produtos" },
     { label: "Sobre", path: "/sobre" },
-    { label: "Contato", path: "/#contato", anchor: true },
+    { label: "Contato", path: "https://wa.me/5585984642900", anchor: true },
   ];
 
   return (
@@ -101,7 +127,7 @@ const Navbar = () => {
         {/* Ações (login/perfil) */}
         <div className="flex items-center gap-4">
           {role ? (
-            <div className="relative">
+            <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen((prev) => !prev)}
                 className="flex items-center justify-center w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-600 text-black transition"
@@ -203,7 +229,10 @@ const Navbar = () => {
           />
 
           {/* Sidebar */}
-          <div className="absolute top-0 right-0 w-64 h-full bg-gray-950 shadow-lg p-6 flex flex-col gap-6 text-white animate-slide-in">
+          <div
+            ref={sidebarRef}
+            className="absolute top-0 right-0 w-64 h-full bg-gray-950 shadow-lg p-6 flex flex-col gap-6 text-white animate-slide-in"
+          >
             <button
               className="self-end text-gray-400 hover:text-white"
               onClick={() => setMenuOpen(false)}

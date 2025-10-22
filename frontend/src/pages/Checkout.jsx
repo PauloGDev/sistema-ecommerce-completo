@@ -43,6 +43,8 @@ const CheckoutPage = () => {
   // Controles para edição opcional
   const [editarTelefone, setEditarTelefone] = useState(false);
   const [editarEmail, setEditarEmail] = useState(false);
+    const API_URL = import.meta.env.VITE_API_URL;
+
 
   // Buscar usuário logado
   useEffect(() => {
@@ -51,7 +53,7 @@ const CheckoutPage = () => {
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:8080/api/usuarios/me", {
+        const res = await fetch(`${API_URL}/usuarios/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -108,7 +110,7 @@ const handlePagamento = async () => {
     email: editarEmail ? email : usuarioData.email || email || "",
   };
 
-  const pedidoRes = await fetch("http://localhost:8080/api/pedidos", {
+  const pedidoRes = await fetch(`${API_URL}/pedidos`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -125,7 +127,7 @@ const handlePagamento = async () => {
   const pedidoData = await pedidoRes.json();
 
   // 2️⃣ Cria sessão Stripe
-const checkoutRes = await fetch(`http://localhost:8080/api/pedidos/${pedidoData.id}/checkout`, {
+const checkoutRes = await fetch(`${API_URL}/pedidos/${pedidoData.id}/checkout`, {
   method: "POST",
   headers: { Authorization: `Bearer ${token}` },
 });
@@ -141,7 +143,7 @@ if (checkoutData.error) {
 const stripe = await stripePromise;
 
 // limpa o backend
-await fetch(`http://localhost:8080/api/carrinho/limpar?usuarioId=${localStorage.getItem("usuarioId")}`, {
+await fetch(`${API_URL}/carrinho/limpar?usuarioId=${localStorage.getItem("usuarioId")}`, {
   method: "POST",
   headers: { Authorization: `Bearer ${token}` },
 });

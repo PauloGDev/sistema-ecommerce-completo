@@ -12,7 +12,7 @@ const UsuarioPerfilDrawer = ({ perfil, onClose }) => {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/60 z-40"
-        onClick={onClose} // 🔹 fecha ao clicar no fundo
+        onClick={onClose}
       />
 
       {/* Drawer */}
@@ -20,9 +20,9 @@ const UsuarioPerfilDrawer = ({ perfil, onClose }) => {
         initial={{ x: "100%" }}
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
-        transition={{  duration: 0.25, ease: "easeOut"  }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
         className="fixed inset-y-0 right-0 w-[420px] bg-gray-950 text-white z-50 flex flex-col"
-        onClick={(e) => e.stopPropagation()} // 🔹 evita fechar ao clicar dentro
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex justify-between items-center px-5 py-4 border-b border-white/10 bg-gray-900">
@@ -66,10 +66,25 @@ const UsuarioPerfilDrawer = ({ perfil, onClose }) => {
                     key={e.id}
                     className="p-3 bg-gray-800/70 rounded-lg border border-white/5"
                   >
-                    <p className="font-medium">{e.logradouro}, {e.numero}</p>
+                    <p className="font-medium">
+                      {e.logradouro}, {e.numero}
+                    </p>
+
+                    {e.complemento && (
+                      <p className="text-sm text-gray-200">
+                        {e.complemento}
+                      </p>
+                    )}
+
                     <p className="text-sm text-gray-400">
                       {e.bairro}, {e.cidade}/{e.estado} • {e.cep}
                     </p>
+
+                    {e.padrao && (
+                      <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded bg-amber-500 text-black font-semibold">
+                        Endereço padrão
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

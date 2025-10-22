@@ -6,6 +6,8 @@ const PrivateRoute = ({ children, role }) => {
   const location = useLocation();
   const [userData, setUserData] = useState(null); // dados do usuário retornados pelo backend
   const [loading, setLoading] = useState(true);
+    const API_URL = import.meta.env.VITE_API_URL;
+
 
   useEffect(() => {
     const validateToken = async () => {
@@ -16,7 +18,7 @@ const PrivateRoute = ({ children, role }) => {
       }
 
       try {
-        const res = await fetch("http://localhost:8080/api/auth/validate", {
+        const res = await fetch(`${API_URL}/auth/validate`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

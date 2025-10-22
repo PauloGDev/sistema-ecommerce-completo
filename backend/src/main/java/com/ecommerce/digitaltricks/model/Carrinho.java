@@ -3,6 +3,7 @@ package com.ecommerce.digitaltricks.model;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Entity
 public class Carrinho {
@@ -11,7 +12,7 @@ public class Carrinho {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Relacionamento com usuário dono do carrinho
+    // Relacionamento com usuário
     @OneToOne
     @JoinColumn(name = "usuario_id", unique = true)
     private Usuario usuario;
@@ -48,6 +49,28 @@ public class Carrinho {
 
     public double getTotal() { return total; }
 
+    public void adicionarItemComVariacao(Produto produto, Variacao variacao, int quantidade) {
+        Optional<CarrinhoItem> itemExistente = this.itens.stream()
+                .filter(item -> item.getVariacao() != null && item.getVariacao().getId().equals(variacao.getId()))
+                .findFirst();
+
+        if (itemExistente.isPresent()) {
+            CarrinhoItem item = itemExistente.get();
+            item.setQuantidade(item.getQuantidade() + quantidade);
+        } else {
+            CarrinhoItem novoItem = new CarrinhoItem();
+            novoItem.setProduto(produto);
+            novoItem.setVariacao(variacao);
+            novoItem.setQuantidade(quantidade);
+            novoItem.setPrecoUnitario(variacao.getPreco() != null ? variacao.getPreco() : produto.getPrecoBase());
+            this.itens.add(novoItem);
+        }
+
+        calcularTotal();
+    }
+
+
+
     public void adicionarItem(Produto produto, int quantidade) {
         for (CarrinhoItem item : itens) {
             if (item.getProduto().getId().equals(produto.getId())) {
@@ -71,8 +94,14 @@ public class Carrinho {
     }
 
     public void calcularTotal() {
-        total = itens.stream()
-                .mapToDouble(i -> i.getProduto().getPrecoBase() * i.getQuantidade())
+        this.total = itens.stream()
+                .mapToDouble(item -> {
+                    double preco = Optional.ofNullable(item.getVariacao())
+                            .map(Variacao::getPreco)
+                            .orElse(Optional.ofNullable(item.getProduto().getPrecoBase()).orElse(0.0));
+                    return preco * item.getQuantidade();
+                })
                 .sum();
     }
+
 }

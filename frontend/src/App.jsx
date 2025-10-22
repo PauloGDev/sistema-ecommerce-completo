@@ -23,13 +23,14 @@ import Login from "./pages/Login";
 import PublicRoute from "./context/PublicRoute";
 import Register from "./pages/Register";
 import UserPanel from "./pages/UserPanel";
-import CheckoutPage from "./pages/Checkout";
 import PedidosPage from "./pages/PedidosPage";
 import SuccessPage from "./pages/SuccessPage";
 import CancelPage from "./pages/CancelPage";
 import ForgotPassword from "./pages/login/ForgotPassword";
 import ResetPassword from "./pages/login/ResetPassword";
 import CarrinhoPage from "./components/CarrinhoPage";
+import CheckoutPage from "./components/checkout/CheckoutPage";
+import DireitosPage from "./pages/Direitos";
 
 const App = () => {
   const [loading, setLoading] = useState(true);
@@ -76,6 +77,14 @@ const App = () => {
           element={
             <PublicRoute>
               <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/direitos"
+          element={
+            <PublicRoute>
+              <DireitosPage />
             </PublicRoute>
           }
         />
@@ -152,6 +161,7 @@ const App = () => {
 
         <Route path="/carrinho" element={<CarrinhoPage />} />
         <Route path="/produtos/:slug" element={<ProdutoPage />} />
+         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="*" element={<Error404 />} />
         <Route
           path="/politica-de-privacidade"

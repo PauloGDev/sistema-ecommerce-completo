@@ -3,7 +3,7 @@ const EnderecoInfo = ({ endereco }) => {
 
   return (
     <div className="text-sm leading-snug">
-      <p>{endereco.logradouro}, {endereco.numero}</p>
+      <p>{endereco.logradouro}, {endereco.numero}, {endereco.complemento}</p>
       <p>{endereco.bairro} - {endereco.cidade}/{endereco.estado}</p>
       <p>CEP: {endereco.cep}</p>
     </div>

@@ -6,7 +6,9 @@ import com.ecommerce.digitaltricks.repository.PedidoRepository;
 import com.ecommerce.digitaltricks.repository.ProdutoRepository;
 import com.ecommerce.digitaltricks.repository.UsuarioRepository;
 import com.ecommerce.digitaltricks.service.CheckoutService;
+import com.ecommerce.digitaltricks.service.EmailService;
 import com.ecommerce.digitaltricks.service.ProdutoService;
+import com.ecommerce.digitaltricks.utils.CpfValidator;
 import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import org.springframework.data.domain.Page;
@@ -23,7 +25,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 public class PedidoController {
 
     private final PedidoRepository pedidoRepository;
@@ -31,18 +33,27 @@ public class PedidoController {
     private final CheckoutService checkoutService;
     private final ProdutoRepository produtoRepository;
     private final ProdutoService produtoService;
+    private final EmailService emailService;
 
     public PedidoController(PedidoRepository pedidoRepository,
                             UsuarioRepository usuarioRepository,
-                            CheckoutService checkoutService, ProdutoRepository produtoRepository, ProdutoService produtoService) {
+                            CheckoutService checkoutService, ProdutoRepository produtoRepository, ProdutoService produtoService, EmailService emailService) {
         this.pedidoRepository = pedidoRepository;
         this.usuarioRepository = usuarioRepository;
         this.checkoutService = checkoutService;
         this.produtoRepository = produtoRepository;
         this.produtoService = produtoService;
+        this.emailService = emailService;
     }
 
-    @PostMapping
+    @GetMapping("/{pedidoId}/status")
+    public ResponseEntity<?> getStatus(@PathVariable Long pedidoId) {
+        return pedidoRepository.findById(pedidoId)
+                .map(pedido -> ResponseEntity.ok(Map.of("status", pedido.getStatus())))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/criar")
     public ResponseEntity<PedidoDTO> criarPedido(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody PedidoRequestDTO pedidoRequest
@@ -57,26 +68,51 @@ public class PedidoController {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Endereço inválido"));
 
-        // buscar produtos e montar os itens
+        // Monta os itens do pedido respeitando o preço enviado pelo frontend
         List<ItemPedido> itens = pedidoRequest.itens().stream()
                 .map(i -> {
                     Produto produto = produtoRepository.findById(i.produtoId())
                             .orElseThrow(() -> new RuntimeException("Produto não encontrado: " + i.produtoId()));
 
-                    return new ItemPedido(
-                            produto,
-                            produto.getNome(),
-                            i.quantidade(),
-                            produto.getPrecoBase(),
-                            produto.getImagemUrl()
-                    );
-                })
-                .toList();
+                    Variacao variacaoSelecionada = null;
+                    String nomeProduto = i.nomeProduto();
+                    String imagemUrl = produto.getImagemUrl();
+                    Double precoUnitario;
 
-        // calcular total automaticamente
+                    produtoService.atualizarPedidosProduto(i.produtoId());
+
+                    // Usa o preço enviado pelo frontend se for válido
+                    if (i.precoUnitario() != null && i.precoUnitario() > 0) {
+                        precoUnitario = i.precoUnitario();
+                    } else if (i.variacaoId() != null) {
+                        // caso tenha variação selecionada
+                        variacaoSelecionada = produto.getVariacoes().stream()
+                                .filter(v -> v.getId().equals(i.variacaoId()))
+                                .findFirst()
+                                .orElseThrow(() -> new RuntimeException("Variação não encontrada: " + i.variacaoId()));
+
+                        precoUnitario = (variacaoSelecionada.getPreco() != null && variacaoSelecionada.getPreco() > 0)
+                                ? variacaoSelecionada.getPreco()
+                                : produto.getPrecoBase();
+
+                        nomeProduto += " - " + variacaoSelecionada.getNome();
+                    } else {
+                        precoUnitario = produto.getPrecoBase();
+                    }
+
+                    ItemPedido item = new ItemPedido(produto, nomeProduto, i.quantidade(), precoUnitario, imagemUrl);
+                    item.setVariacao(variacaoSelecionada);
+                    return item;
+                })
+                .collect(Collectors.toList());
+
         double total = itens.stream()
                 .mapToDouble(item -> item.getPrecoUnitario() * item.getQuantidade())
                 .sum();
+
+        if (pedidoRequest.frete() != null && pedidoRequest.frete().valor() != null) {
+            total += pedidoRequest.frete().valor();
+        }
 
         Pedido pedido = new Pedido();
         pedido.setUsuario(usuario);
@@ -85,17 +121,24 @@ public class PedidoController {
         pedido.setStatus("PENDENTE");
         pedido.setTotal(total);
 
-        // dados do comprador
+        pedido.setServicoFrete(pedidoRequest.frete() != null ? pedidoRequest.frete().servico() : null);
+        pedido.setValorFrete(pedidoRequest.frete() != null ? pedidoRequest.frete().valor() : null);
+        pedido.setPrazoFrete(pedidoRequest.frete() != null ? pedidoRequest.frete().prazo() : null);
+
         pedido.setNomeCompleto(
                 (pedidoRequest.nomeCompleto() != null && !pedidoRequest.nomeCompleto().isBlank())
                         ? pedidoRequest.nomeCompleto()
                         : usuario.getPerfil().getNomeCompleto()
         );
-        pedido.setCpf(
-                (pedidoRequest.cpf() != null && !pedidoRequest.cpf().isBlank())
-                        ? pedidoRequest.cpf()
-                        : usuario.getPerfil().getCpf()
-        );
+        String cpfFinal = (pedidoRequest.cpf() != null && !pedidoRequest.cpf().isBlank())
+                ? pedidoRequest.cpf()
+                : usuario.getPerfil().getCpf();
+
+        if (cpfFinal != null && !CpfValidator.isValidCPF(cpfFinal)) {
+            throw new RuntimeException("CPF inválido. Verifique e tente novamente.");
+        }
+        pedido.setCpf(cpfFinal);
+
         pedido.setTelefone(
                 (pedidoRequest.telefone() != null && !pedidoRequest.telefone().isBlank())
                         ? pedidoRequest.telefone()
@@ -109,19 +152,42 @@ public class PedidoController {
 
         Pedido salvo = pedidoRepository.save(pedido);
 
-            int i = 0;
+        // Atualiza estoque
         for (ItemPedido item : pedido.getItens()) {
-            int finalI = i;
-            Produto produto = produtoRepository.findById(item.getProdutoId())
-                    .orElseThrow(() -> new RuntimeException("Produto não encontrado: " + pedido.getItens().get(finalI).getProdutoId()));
-            produto.setEstoque(produto.getEstoque() - item.getQuantidade());
-            i += 1;
-            produtoRepository.save(produto);
-
+            if (item.getVariacao() != null) {
+                Variacao var = item.getVariacao();
+                var.setEstoque(var.getEstoque() - item.getQuantidade());
+                produtoRepository.save(var.getProduto()); // salva produto pai se necessário
+            } else {
+                Produto produto = item.getProduto();
+                produto.setEstoque(produto.getEstoque() - item.getQuantidade());
+                produtoRepository.save(produto);
+            }
         }
 
-
         return ResponseEntity.ok(toDTO(salvo));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PedidoDTO> buscarPorId(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        Usuario usuario = usuarioRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        Pedido pedido = pedidoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        // Se o usuário não for admin, só pode ver o próprio pedido
+        boolean isAdmin = usuario.getRoles().stream()
+                .anyMatch(r -> r.equalsIgnoreCase("ROLE_ADMIN"));
+
+        if (!isAdmin && !pedido.getUsuario().getId().equals(usuario.getId())) {
+            return ResponseEntity.status(403).build();
+        }
+
+        return ResponseEntity.ok(toDTO(pedido));
     }
 
 
@@ -162,7 +228,15 @@ public class PedidoController {
         if (dto.total() != null) pedido.setTotal(dto.total());
         if (dto.status() != null) pedido.setStatus(dto.status());
         if (dto.nomeCompleto() != null) pedido.setNomeCompleto(dto.nomeCompleto());
-        if (dto.enderecoEntrega() != null) pedido.setEnderecoEntrega(dto.enderecoEntrega());
+
+        if (dto.enderecoId() != null) {
+            Endereco endereco = pedido.getUsuario().getPerfil().getEnderecos().stream()
+                    .filter(e -> e.getId().equals(dto.enderecoId()))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Endereço não encontrado"));
+            pedido.setEnderecoEntrega(endereco);
+        }
+
         if (dto.cpf() != null) pedido.setCpf(dto.cpf());
         if (dto.telefone() != null) pedido.setTelefone(dto.telefone());
         if (dto.email() != null) pedido.setEmail(dto.email());
@@ -171,9 +245,32 @@ public class PedidoController {
         // ⚙️ Atualizar estoque conforme status
         produtoService.atualizarProduto(pedido, statusAnterior, pedido.getStatus());
         Pedido salvo = pedidoRepository.save(pedido);
+
+        try {
+            switch (pedido.getStatus().toUpperCase()) {
+                case "PAGO", "PAGAMENTO_APROVADO" -> emailService.enviarPagamentoAprovado(
+                        pedido.getEmail(),
+                        pedido.getNomeCompleto(),
+                        String.valueOf(pedido.getId()),
+                        pedido.getTotal()
+                );
+                case "ENVIADO", "DESPACHADO" -> {
+                    String rastreio = pedido.getLinkRastreio() != null ? pedido.getLinkRastreio() : "Aguardando código";
+                    emailService.enviarPedidoEnviado(
+                            pedido.getEmail(),
+                            pedido.getNomeCompleto(),
+                            String.valueOf(pedido.getId()),
+                            rastreio
+                    );
+                }
+                default -> { /* outros status não disparam e-mail */ }
+            }
+        } catch (Exception e) {
+            System.err.println("Erro ao enviar e-mail: " + e.getMessage());
+        }
+
         return ResponseEntity.ok(toDTO(salvo));
     }
-
 
     private PedidoDTO toDTO(Pedido pedido) {
         return new PedidoDTO(
@@ -189,11 +286,13 @@ public class PedidoController {
                         pedido.getEnderecoEntrega().getCidade(),
                         pedido.getEnderecoEntrega().getEstado(),
                         pedido.getEnderecoEntrega().getCep(),
+                        pedido.getEnderecoEntrega().getComplemento(),
                         pedido.getEnderecoEntrega().isPadrao()
                 ) : null,
                 pedido.getItens().stream()
                         .map(i -> new ItemPedidoDTO(
                                 i.getId(),
+                                i.getVariacao() != null ? i.getVariacao().getId() : null,
                                 i.getNomeProduto(),
                                 i.getQuantidade(),
                                 i.getPrecoUnitario(),
@@ -204,7 +303,7 @@ public class PedidoController {
                 pedido.getCpf(),
                 pedido.getTelefone(),
                 pedido.getEmail(),
-                pedido.getUsuario() != null ? new UsuarioDTO(
+                pedido.getUsuario() != null ? new Usuario(
                         pedido.getUsuario().getId(),
                         pedido.getUsuario().getUsername(),
                         pedido.getUsuario().getNome(),
@@ -212,7 +311,10 @@ public class PedidoController {
                         pedido.getUsuario().getStatus(),
                         pedido.getUsuario().getRoles()
                 ) : null,
-                pedido.getLinkRastreio() // devolve o link de rastreio
+                pedido.getLinkRastreio(),
+                pedido.getServicoFrete(),
+                pedido.getValorFrete(),
+                pedido.getPrazoFrete()
         );
     }
 
@@ -241,8 +343,8 @@ public class PedidoController {
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}")
-                .setCancelUrl("http://localhost:5173/cancel")
+                .setSuccessUrl("https://sublimeperfumes.com.br/success?session_id={CHECKOUT_SESSION_ID}")
+                .setCancelUrl("https://sublimeperfumes.com.br/cancel")
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
                                 .setQuantity(1L)

@@ -1,11 +1,10 @@
 package com.ecommerce.digitaltricks.dto;
 
-import com.ecommerce.digitaltricks.model.Categoria;
-
 import java.util.List;
 
 public record ProdutoDTO(
         Long id,
+        boolean ativo,
         String nome,
         String descricao,
         List<String> categorias,
@@ -13,5 +12,7 @@ public record ProdutoDTO(
         Integer estoque,
         String slug,
         String imagemUrl,
-        List<VariacaoDTO> variacoes
+        List<VariacaoDTO> variacoes,
+        Integer pedidos,
+        Double precoMinimo
 ) {}

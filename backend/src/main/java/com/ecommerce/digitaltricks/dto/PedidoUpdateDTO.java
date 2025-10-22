@@ -8,11 +8,11 @@ import java.util.List;
 public record PedidoUpdateDTO(
         Double total,
         String status,
-        Endereco enderecoEntrega,
+        Long enderecoId,
         String nomeCompleto,
         String cpf,
         String telefone,
         String email,
-        String linkRastreio,
-        List<ItemPedido> itens
+        String linkRastreio
 ) {}
+

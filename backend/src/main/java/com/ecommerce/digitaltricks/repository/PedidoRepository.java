@@ -1,5 +1,6 @@
 package com.ecommerce.digitaltricks.repository;
 
+import com.ecommerce.digitaltricks.model.ItemPedido;
 import com.ecommerce.digitaltricks.model.Pedido;
 import com.ecommerce.digitaltricks.model.Usuario;
 import org.springframework.data.domain.Page;

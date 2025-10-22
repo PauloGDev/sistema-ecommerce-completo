@@ -9,6 +9,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -22,7 +23,7 @@ const Login = () => {
       setLoading(true);
       setMensagem("");
 
-      const res = await fetch("http://localhost:8080/api/auth/login", {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password: senha }),

@@ -1,5 +1,7 @@
 package com.ecommerce.digitaltricks.dto;
 
+import com.ecommerce.digitaltricks.model.Usuario;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -14,6 +16,10 @@ public record PedidoDTO(
         String cpf,
         String telefone,
         String email,
-        UsuarioDTO usuarioDTO,
-        String linkRastreio
+        Usuario usuario,
+        String linkRastreio,
+        String servicoFrete,
+        Double valorFrete,
+        String prazoFrete
 ) {}
+

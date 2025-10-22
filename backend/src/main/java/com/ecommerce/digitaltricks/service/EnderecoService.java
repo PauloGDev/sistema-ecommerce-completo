@@ -25,10 +25,34 @@ public class EnderecoService {
         this.perfilRepository = perfilRepository;
     }
 
-    public List<Endereco> listarEnderecos(Long usuarioId) {
-        Perfil perfil = perfilRepository.findByUsuarioId(usuarioId)
-                .orElseThrow(() -> new RuntimeException("Perfil não encontrado"));
-        return enderecoRepository.findByPerfilUsuarioId(perfil.getId());
+    public Endereco editarEndereco(Long usuarioId, Long enderecoId, Endereco novo) {
+        Endereco existente = enderecoRepository.findById(enderecoId)
+                .orElseThrow(() -> new RuntimeException("Endereço não encontrado"));
+
+        if (!existente.getPerfil().getUsuario().getId().equals(usuarioId)) {
+            throw new RuntimeException("Acesso negado");
+        }
+
+        existente.setLogradouro(novo.getLogradouro());
+        existente.setNumero(novo.getNumero());
+        existente.setComplemento(novo.getComplemento());
+        existente.setBairro(novo.getBairro());
+        existente.setCidade(novo.getCidade());
+        existente.setEstado(novo.getEstado());
+        existente.setCep(novo.getCep());
+
+        return enderecoRepository.save(existente);
+    }
+
+    public void excluirEndereco(Long usuarioId, Long enderecoId) {
+        Endereco existente = enderecoRepository.findById(enderecoId)
+                .orElseThrow(() -> new RuntimeException("Endereço não encontrado"));
+
+        if (!existente.getPerfil().getUsuario().getId().equals(usuarioId)) {
+            throw new RuntimeException("Acesso negado");
+        }
+
+        enderecoRepository.delete(existente);
     }
 
     public Endereco adicionarEndereco(Long usuarioId, Endereco endereco) {
@@ -41,7 +65,7 @@ public class EnderecoService {
         endereco.setPerfil(perfil);
 
         // Se for o primeiro endereço do perfil, define como padrão automaticamente
-        if (enderecoRepository.findByPerfilUsuarioId(perfil.getId()).isEmpty()) {
+        if (perfil.getEnderecos().isEmpty() || perfil.getEnderecos() == null) {
             endereco.setPadrao(true);
         }
 
@@ -52,7 +76,7 @@ public class EnderecoService {
         Perfil perfil = perfilRepository.findByUsuarioId(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Perfil não encontrado"));
 
-        List<Endereco> enderecos = enderecoRepository.findByPerfilUsuarioId(perfil.getId());
+        List<Endereco> enderecos = perfil.getEnderecos();
 
         if (enderecos.isEmpty()) {
             throw new RuntimeException("Nenhum endereço encontrado");

@@ -55,7 +55,7 @@ public class PerfilController {
         perfil.setTelefone(perfilAtualizado.getTelefone());
         perfil.setCpf(perfilAtualizado.getCpf());
 
-        // 🔹 Zera e substitui os endereços
+        // substitui os endereços
         perfil.getEnderecos().clear();
         if (perfilAtualizado.getEnderecos() != null) {
             perfilAtualizado.getEnderecos().forEach(e -> {

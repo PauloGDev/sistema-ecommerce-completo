@@ -60,7 +60,7 @@ const PedidoRowComponent = ({ pedido, i, isExpanded, onExpand, setPedidoEdit, se
         aria-expanded={isExpanded}
       >
         <td className="p-3 font-medium text-gray-100">{pedido.id}</td>
-        <td className="p-3">{pedido?.nomeCompleto || "Guest"}</td>
+        <td className="p-3">{pedido.usuario.username}</td>
         <td className="p-3 hidden md:table-cell">{pedido?.cpf || "—"}</td>
         <td className="p-3 hidden md:table-cell">{formatPhone(pedido?.telefone)}</td>
         <td className="p-3 hidden md:table-cell truncate max-w-[180px]">{pedido?.email || "—"}</td>
@@ -148,6 +148,7 @@ const PedidoRowComponent = ({ pedido, i, isExpanded, onExpand, setPedidoEdit, se
                   {/* Dados do Cliente no Pedido */}
                   <div className="bg-gray-800 p-4 rounded-lg shadow">
                     <h4 className="font-semibold mb-2 text-lg">Dados do Cliente (Pedido)</h4>
+                    <p className="text-sm mb-4"><strong>Usuário:</strong> {pedido?.usuario.username || "—"}</p>
                     <p className="text-sm"><strong>Nome:</strong> {pedido?.nomeCompleto || "—"}</p>
                     <p className="text-sm"><strong>CPF:</strong> {pedido?.cpf || "—"}</p>
                     <p className="text-sm"><strong>Telefone:</strong> {formatPhone(pedido?.telefone)}</p>
@@ -180,10 +181,63 @@ PedidoRowComponent.propTypes = {
 
 const PedidoRow = memo(PedidoRowComponent);
 
+// Skeleton de carregamento
+const SkeletonRow = ({ columns = 9, index = 0 }) => {
+  // Define larguras diferentes por coluna para ficar mais realista
+  const columnWidths = ["20%", "25%", "15%", "15%", "30%", "15%", "20%", "15%", "25%"];
+
+  return (
+    <motion.tr
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: index * 0.05 }}
+      className="border-b border-gray-700"
+    >
+      {Array.from({ length: columns }).map((_, i) => (
+        <td key={i} className="p-3">
+          {i === 6 ? (
+            // Simula uma tag de status
+            <motion.div
+              className="h-4 rounded-full bg-gray-600"
+              style={{ width: columnWidths[i] }}
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 1, repeat: Infinity, repeatType: "loop", delay: i * 0.1 }}
+            />
+          ) : i === 8 ? (
+            // Simula botões de ação
+            <div className="flex gap-2">
+              <motion.div
+                className="h-4 rounded bg-gray-600"
+                style={{ width: "50%" }}
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1, repeat: Infinity, repeatType: "loop", delay: i * 0.1 }}
+              />
+              <motion.div
+                className="h-4 rounded bg-gray-600"
+                style={{ width: "30%" }}
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 1, repeat: Infinity, repeatType: "loop", delay: i * 0.15 }}
+              />
+            </div>
+          ) : (
+            // Colunas de texto normal
+            <motion.div
+              className="h-4 bg-gray-600 rounded"
+              style={{ width: columnWidths[i] }}
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 1, repeat: Infinity, repeatType: "loop", delay: i * 0.1 }}
+            />
+          )}
+        </td>
+      ))}
+    </motion.tr>
+  );
+};
+
 // -------------------------------
 // Tabela principal
 // -------------------------------
-const TabelaPedidos = ({ pedidos, setPedidoEdit, setForm }) => {
+const TabelaPedidos = ({ pedidos, setPedidoEdit, setForm, loading }) => {
   const [expandedId, setExpandedId] = useState(null);
 
   const handleExpand = (id) => {
@@ -211,25 +265,27 @@ const TabelaPedidos = ({ pedidos, setPedidoEdit, setForm }) => {
           </tr>
         </thead>
         <tbody>
-          {pedidos.length > 0 ? (
-            pedidos.map((pedido, i) => (
-              <PedidoRow
-                key={pedido.id}
-                pedido={pedido}
-                i={i}
-                isExpanded={expandedId === pedido.id}
-                onExpand={handleExpand}
-                setPedidoEdit={setPedidoEdit}
-                setForm={setForm}
-              />
-            ))
-          ) : (
-            <tr>
-              <td colSpan={9} className="text-center p-6 text-gray-400">
-                Nenhum pedido encontrado.
-              </td>
-            </tr>
-          )}
+          {loading
+            ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} index={i} />)
+            : pedidos.length > 0
+            ? pedidos.map((pedido, i) => (
+                <PedidoRow
+                  key={pedido.id}
+                  pedido={pedido}
+                  i={i}
+                  isExpanded={expandedId === pedido.id}
+                  onExpand={handleExpand}
+                  setPedidoEdit={setPedidoEdit}
+                  setForm={setForm}
+                />
+              ))
+            : (
+              <tr>
+                <td colSpan={9} className="text-center p-6 text-gray-400">
+                  Nenhum pedido encontrado.
+                </td>
+              </tr>
+            )}
         </tbody>
       </motion.table>
     </div>
@@ -240,6 +296,7 @@ TabelaPedidos.propTypes = {
   pedidos: PropTypes.array.isRequired,
   setPedidoEdit: PropTypes.func.isRequired,
   setForm: PropTypes.func.isRequired,
+  loading: PropTypes.bool,
 };
 
 export default TabelaPedidos;

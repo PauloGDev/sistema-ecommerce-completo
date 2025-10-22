@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
-import { User, LogOut, Package, Mail, Edit, Star } from "lucide-react";
+import { User, LogOut, Package, Mail, Edit, Star, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import EditarPerfilModal from "./painel-usuario/EditarPerfilModal";
 
 const UserPanel = () => {
   const [perfil, setPerfil] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
+    const API_URL = import.meta.env.VITE_API_URL;
+
 
   useEffect(() => {
     carregarPerfil();
@@ -19,7 +23,8 @@ const UserPanel = () => {
       return;
     }
 
-    fetch("http://localhost:8080/api/perfis/me", {
+    setLoading(true);
+    fetch(`${API_URL}/perfis/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -27,7 +32,10 @@ const UserPanel = () => {
         return res.json();
       })
       .then((data) => {
-        setPerfil(data);
+        setTimeout(() => {
+          setPerfil(data);
+          setLoading(false);
+        }, 600);
       })
       .catch(() => {
         localStorage.removeItem("token");
@@ -37,7 +45,8 @@ const UserPanel = () => {
 
   const handleSave = (perfilAtualizado) => {
     const token = localStorage.getItem("token");
-    fetch("http://localhost:8080/api/perfis/me", {
+    setSaving(true);
+    fetch(`${API_URL}/perfis/me`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -49,7 +58,8 @@ const UserPanel = () => {
       .then(() => {
         setModalOpen(false);
         carregarPerfil();
-      });
+      })
+      .finally(() => setSaving(false));
   };
 
   const handleLogout = () => {
@@ -57,6 +67,39 @@ const UserPanel = () => {
     navigate("/login");
   };
 
+  if (loading) {
+    return (
+      <section className="min-h-screen flex items-center justify-center bg-gray-900 text-white animate-fade-in">
+        <div className="bg-white/10 p-8 rounded-2xl w-full max-w-3xl space-y-6 animate-pulse">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-gray-700 rounded-full" />
+            <div className="flex-1 space-y-3">
+              <div className="h-5 bg-gray-700 rounded w-1/2" />
+              <div className="h-4 bg-gray-700 rounded w-1/3" />
+              <div className="h-4 bg-gray-700 rounded w-1/4" />
+            </div>
+          </div>
+
+          <div className="bg-gray-800/50 rounded-2xl p-6 space-y-3">
+            <div className="h-5 bg-gray-700 rounded w-1/3" />
+            <div className="h-4 bg-gray-700 rounded w-full" />
+            <div className="h-4 bg-gray-700 rounded w-3/4" />
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="h-12 bg-gray-700 rounded-xl" />
+            <div className="h-12 bg-gray-700 rounded-xl" />
+          </div>
+
+          <div className="flex justify-center mt-6">
+            <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // 🔸 PERFIL NÃO ENCONTRADO
   if (!perfil) {
     return (
       <section className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
@@ -84,8 +127,9 @@ const UserPanel = () => {
     );
   }
 
+  // 🔸 PERFIL CARREGADO
   return (
-    <section className="min-h-screen bg-gray-900 text-white flex items-center justify-center px-6 py-12">
+    <section className="relative min-h-screen bg-gray-900 text-white flex items-center justify-center px-6 py-12 animate-fade-in">
       <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl shadow-xl p-8 w-full max-w-3xl space-y-8">
         {/* Cabeçalho */}
         <div className="flex items-center gap-4 justify-between">
@@ -102,7 +146,6 @@ const UserPanel = () => {
             </div>
           </div>
 
-          {/* Botão Editar */}
           <button
             onClick={() => setModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 transition"
@@ -119,7 +162,6 @@ const UserPanel = () => {
               <p key={end.id || i} className="flex items-center gap-2">
                 {end.logradouro}, {end.numero} - {end.cidade}/{end.estado} ({end.cep})
                 {end.padrao && <Star className="w-4 h-4 text-amber-400" />}
-                
               </p>
             ))
           ) : (
@@ -145,7 +187,14 @@ const UserPanel = () => {
         </div>
       </div>
 
-      {/* Modal Editar Perfil */}
+      {/* 🔹 Overlay de Loading Global (salvando ou processando) */}
+      {saving && (
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center z-50">
+          <Loader2 className="w-10 h-10 text-amber-400 animate-spin mb-3" />
+          <p className="text-gray-200 text-sm">Salvando alterações...</p>
+        </div>
+      )}
+
       <EditarPerfilModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}

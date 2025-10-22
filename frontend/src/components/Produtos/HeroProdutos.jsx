@@ -33,13 +33,6 @@ export default function HeroProdutos() {
           Perfumes originais, importados e marcantes — descubra aromas que
           traduzem estilo e personalidade.
         </p>
-
-        <a
-          href="#lista-produtos"
-          className="mt-8 inline-block px-8 py-3 rounded-full font-medium transition bg-amber-500 text-black hover:text-gray-400 hover:bg-gray-900 shadow-lg"
-        >
-          Ver Produtos
-        </a>
       </motion.div>
     </section>
   );

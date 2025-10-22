@@ -1,27 +1,50 @@
 // src/components/CarrosselCategoriaSwiper.jsx
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
 import { Navigation, Mousewheel } from "swiper/modules";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { produtos } from "../assets/produtos";
+import axios from "axios";
 
 const CarrosselCategoria = ({ categoria, title }) => {
+  const API_URL = import.meta.env.VITE_API_URL;
+  const [produtos, setProdutos] = useState([]);
   const prevRef = useRef(null);
   const nextRef = useRef(null);
   const swiperRef = useRef(null);
 
-  const filtrados = produtos.filter((p) => p.categorias.includes(categoria));
+  // Busca produtos do backend
+ useEffect(() => {
+  const fetchProdutos = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { "Content-Type": "application/json" };
+      if (token && token !== "null" && token !== "undefined" && token.length > 10) {
+        headers.Authorization = `Bearer ${token}`;
+      }
 
-  // Hook SEM condição
+      const res = await axios.get(`${API_URL}/produtos/mais-vendidos`, {
+        params: { categoria: categoria, limit: 10 },
+        headers,
+      });
+
+      setProdutos(res.data);
+    } catch (err) {
+      console.error("Erro ao carregar produtos:", err);
+    }
+  };
+  fetchProdutos();
+}, [categoria]);
+
+
+  // Configura botões de navegação
   useEffect(() => {
     if (!swiperRef.current) return;
     const swiper = swiperRef.current;
     swiper.params.navigation.prevEl = prevRef.current;
     swiper.params.navigation.nextEl = nextRef.current;
-
     if (swiper.navigation) {
       swiper.navigation.destroy();
       swiper.navigation.init();
@@ -29,8 +52,7 @@ const CarrosselCategoria = ({ categoria, title }) => {
     }
   }, []);
 
-  // se não tiver produtos, não renderiza nada
-  if (!filtrados.length) return null;
+  if (!produtos.length) return null;
 
   return (
     <section className="px-4 sm:px-8 lg:px-16 py-8">
@@ -58,47 +80,37 @@ const CarrosselCategoria = ({ categoria, title }) => {
           </div>
         </div>
 
+        {/* Swiper com produtos */}
         <Swiper
-  modules={[Navigation, Mousewheel]}
-  onSwiper={(s) => (swiperRef.current = s)}
-  navigation={{ prevEl: prevRef.current, nextEl: nextRef.current }}
-  mousewheel={{ forceToAxis: true }}
-  spaceBetween={16}
-  slidesPerView={"auto"}
-  centeredSlides={true} // só funciona no mobile
-  breakpoints={{
-    640: { // tablet
-      slidesPerView: "auto",
-      centeredSlides: false,
-      spaceBetween: 16,
-    },
-    1024: { // desktop
-      slidesPerView: "auto",
-      centeredSlides: false,
-      spaceBetween: 20,
-    },
-  }}
-  className="py-2 max-w-[80vw]"
->
-  {filtrados.map((p) => (
-    <SwiperSlide
-      key={p.id}
-      className="
-        h-auto
-        !w-[170px]   // mobile mais compacto
-        sm:!w-[200px]  // tablet médio
-        md:!w-[220px]  // tablets maiores
-        lg:!w-[260px]  // desktop
-        xl:!w-[300px]  // monitores grandes
-      "
-    >
-      <ProductCard product={p} />
-    </SwiperSlide>
-  ))}
-</Swiper>
-
-
-
+          modules={[Navigation, Mousewheel]}
+          onSwiper={(s) => (swiperRef.current = s)}
+          navigation={{ prevEl: prevRef.current, nextEl: nextRef.current }}
+          mousewheel={{ forceToAxis: true }}
+          spaceBetween={16}
+          slidesPerView={"auto"}
+          centeredSlides={true}
+          breakpoints={{
+            640: { slidesPerView: "auto", centeredSlides: false, spaceBetween: 16 },
+            1024: { slidesPerView: "auto", centeredSlides: false, spaceBetween: 20 },
+          }}
+          className="py-2 max-w-[80vw]"
+        >
+          {produtos.map((p) => (
+            <SwiperSlide
+              key={p.id}
+              className="
+                h-auto
+                !w-[170px]
+                sm:!w-[200px]
+                md:!w-[220px]
+                lg:!w-[260px]
+                xl:!w-[300px]
+              "
+            >
+              <ProductCard product={p} />
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
     </section>
   );
@@ -110,9 +122,9 @@ const ProductCard = ({ product }) => {
       <Link to={`/produtos/${product.slug}`} className="flex flex-col h-full">
         <div className="aspect-[4/5] flex items-center justify-center bg-gray-800 p-4">
           <img
-            src={product.imagens?.[0]}
+            src={product.imagemUrl}
             alt={product.nome}
-            className="object-contain max-h-full"
+            className="object-contain max-h-[320px]"
             draggable={false}
           />
         </div>
@@ -126,9 +138,10 @@ const ProductCard = ({ product }) => {
               {formatStartingPrice(product)}
             </p>
           </div>
-          {product.tamanhos?.length > 0 && (
+
+          {product.variacoes?.length > 0 && (
             <div className="mt-2 text-xs text-gray-300">
-              {product.tamanhos.map((t) => t.volume).join(" • ")}
+              {product.variacoes.map((v) => v.nome).join(" • ")}
             </div>
           )}
         </div>
@@ -139,23 +152,13 @@ const ProductCard = ({ product }) => {
 
 // helpers
 function formatStartingPrice(product) {
-  if (!product.tamanhos?.length) return product.preco || "";
-  const nums = product.tamanhos
-    .map((t) => parsePrice(t.preco))
+  if (!product.variacoes?.length) return `R$ ${product.precoBase?.toFixed(2)}`;
+  const nums = product.variacoes
+    .map((v) => parseFloat(v.preco))
     .filter((n) => Number.isFinite(n));
-  if (!nums.length) return product.preco || "";
+  if (!nums.length) return `R$ ${product.precoBase?.toFixed(2)}`;
   const min = Math.min(...nums);
   return `A partir de R$ ${min.toFixed(2).replace(".", ",")}`;
-}
-
-function parsePrice(str) {
-  if (!str) return Infinity;
-  const cleaned = String(str)
-    .replace(/[^\d,.-]/g, "")
-    .replace(".", "")
-    .replace(",", ".");
-  const n = Number(cleaned);
-  return Number.isFinite(n) ? n : Infinity;
 }
 
 export default CarrosselCategoria;

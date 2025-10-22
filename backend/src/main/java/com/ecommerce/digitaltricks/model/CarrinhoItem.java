@@ -13,17 +13,31 @@ public class CarrinhoItem {
     @ManyToOne
     @JoinColumn(name = "produto_id")
     private Produto produto;
-
+    private String nomeProduto;
+    private Double precoUnitario;
     private int quantidade;
     private String imagemUrl;
+    @ManyToOne
+    @JoinColumn(name = "variacao_id")
+    private Variacao variacao;
 
     public CarrinhoItem() {}
 
-    public CarrinhoItem(Produto produto, int quantidade,  String imagemUrl) {
+    public CarrinhoItem(Produto produto, Variacao variacao, int quantidade, String imagemUrl) {
+        this.produto = produto;
+        this.variacao = variacao;
+        this.nomeProduto = variacao.getNome();
+        this.precoUnitario = variacao.getPreco();
+        this.quantidade = quantidade;
+        this.imagemUrl = imagemUrl;
+    }
+
+    public CarrinhoItem(Produto produto, int quantidade, String imagemUrl) {
         this.produto = produto;
         this.quantidade = quantidade;
         this.imagemUrl = imagemUrl;
     }
+
 
     // Getters e setters
     public Long getId() { return id; }
@@ -42,5 +56,29 @@ public class CarrinhoItem {
 
     public void setImagemUrl(String imagemUrl) {
         this.imagemUrl = imagemUrl;
+    }
+
+    public String getNomeProduto() {
+        return nomeProduto;
+    }
+
+    public void setNomeProduto(String nomeProduto) {
+        this.nomeProduto = nomeProduto;
+    }
+
+    public Double getPrecoUnitario() {
+        return precoUnitario;
+    }
+
+    public void setPrecoUnitario(Double precoUnitario) {
+        this.precoUnitario = precoUnitario;
+    }
+
+    public Variacao getVariacao() {
+        return variacao;
+    }
+
+    public void setVariacao(Variacao variacao) {
+        this.variacao = variacao;
     }
 }

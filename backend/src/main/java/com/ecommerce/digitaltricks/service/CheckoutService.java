@@ -19,13 +19,15 @@ public class CheckoutService {
     private final CarrinhoRepository carrinhoRepository;
     private final PedidoRepository pedidoRepository;
     private final ProdutoRepository produtoRepository;
+    private final ProdutoService produtoService;
 
     public CheckoutService(CarrinhoRepository carrinhoRepository,
                            PedidoRepository pedidoRepository,
-                           ProdutoRepository produtoRepository) {
+                           ProdutoRepository produtoRepository, ProdutoService produtoService) {
         this.carrinhoRepository = carrinhoRepository;
         this.pedidoRepository = pedidoRepository;
         this.produtoRepository = produtoRepository;
+        this.produtoService = produtoService;
     }
 
     /**

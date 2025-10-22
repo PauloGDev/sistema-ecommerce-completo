@@ -1,4 +1,3 @@
-// src/pages/PedidosPage.jsx
 import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import PageTitle from "../context/PageTitle";
@@ -44,16 +43,16 @@ const PedidosPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const isValidUrl = (url) => {
-  try {
-    new URL(url.startsWith("http") ? url : `https://${url}`);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
+    try {
+      new URL(url.startsWith("http") ? url : `https://${url}`);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -62,7 +61,7 @@ const PedidosPage = () => {
       return;
     }
 
-    fetch("http://localhost:8080/api/pedidos/me", {
+    fetch(`${API_URL}/pedidos/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -72,8 +71,12 @@ const PedidosPage = () => {
         return res.json();
       })
       .then((data) => {
-        console.log("Pedidos recebidos:", data);
-        setPedidos(data);
+        // ✅ Ordena por data (mais recente primeiro)
+        const ordenados = data.sort(
+          (a, b) => new Date(b.data) - new Date(a.data)
+        );
+        console.log("Pedidos recebidos (ordenados):", ordenados);
+        setPedidos(ordenados);
       })
       .catch((err) => console.error(err))
       .finally(() => setLoading(false));
@@ -99,7 +102,7 @@ const PedidosPage = () => {
   );
 
   return (
-    <div>
+    <div className="pt-20">
       <PageTitle title="Meus Pedidos | Sublime Perfumes" />
       <div className="px-4 sm:px-[5vw] md:px-[2vw] lg:px-[9vw] py-16 max-w-5xl mx-auto">
         <motion.h1
@@ -216,10 +219,16 @@ const PedidosPage = () => {
                     <span className="text-amber-400 font-bold text-lg">
                       R$ {pedido.total.toFixed(2)}
                     </span>
+
+                    {/* Só mostra botão de pagar se estiver PENDENTE ou CANCELADO */}
                     {(pedido.status === "PENDENTE" ||
-                      pedido.status === "PAGO") && (
+                      pedido.status === "CANCELADO") && (
                       <button
-                        onClick={() => navigate(`/checkout/${pedido.id}`)}
+                        onClick={() =>
+                          navigate("/checkout", {
+                            state: { total: pedido.total, pedidoId: pedido.id },
+                          })
+                        }
                         className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-black font-semibold px-3 py-1 rounded-lg text-sm transition"
                       >
                         <CreditCard size={16} /> Pagar
@@ -230,11 +239,13 @@ const PedidosPage = () => {
 
                 {/* Rastreio */}
               <div className="mt-4">
-                {isValidUrl(pedido.linkRastreio) ? (
+                {pedido.status === "ENVIADO" && isValidUrl(pedido.linkRastreio) ? (
                   <a
-                    href={pedido.linkRastreio.startsWith("http")
-                      ? pedido.linkRastreio
-                      : `https://${pedido.linkRastreio}`}
+                    href={
+                      pedido.linkRastreio.startsWith("http")
+                        ? pedido.linkRastreio
+                        : `https://${pedido.linkRastreio}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500 text-white font-medium shadow-md hover:shadow-lg hover:scale-[1.02] transition transform"
@@ -244,10 +255,20 @@ const PedidosPage = () => {
                   </a>
                 ) : (
                   <div className="flex items-center gap-2 text-sm text-gray-400 bg-gray-800/40 px-3 py-2 rounded-lg">
-                    <Truck size={16} /> <span>Aguarde, seu pedido ainda não foi enviado.</span>
+                    <Truck size={16} />{" "}
+                    <span>
+                      {pedido.status === "ENVIADO"
+                        ? "Aguardando atualização do rastreio..."
+                        : pedido.status === "ENTREGUE" || pedido.status === "CONCLUIDO"
+                        ? "Pedido entregue com sucesso!"
+                        : pedido.status === "CANCELADO"
+                        ? "Pedido cancelado, tente novamente."
+                        : "Aguarde, seu pedido ainda não foi enviado."}
+                    </span>
                   </div>
                 )}
               </div>
+
 
               </motion.div>
             ))}

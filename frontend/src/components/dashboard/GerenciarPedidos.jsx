@@ -12,12 +12,14 @@ const GerenciarPedidos = () => {
   const [status, setStatus] = useState("");
   const [pedidoEdit, setPedidoEdit] = useState(null);
   const [form, setForm] = useState({});
+  const [loading, setLoading] = useState(true);
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const carregarPedidos = async () => {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        `http://localhost:8080/api/pedidos?page=${page}&size=10&status=${status}`,
+        `${API_URL}/pedidos?page=${page}&size=10&status=${status}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -27,11 +29,11 @@ const GerenciarPedidos = () => {
       );
 
       if (!res.ok) throw new Error("Erro ao buscar pedidos");
-
       const data = await res.json();
       setPedidos(data.content || []);
+      console.log(pedidos)
       setTotalPages(data.totalPages || 1);
-      console.log(data.content)
+      setLoading(false);
     } catch (error) {
       console.error("Erro ao carregar pedidos", error);
     }
@@ -66,7 +68,7 @@ const atualizarPedido = async () => {
     };
 
     const res = await fetch(
-      `http://localhost:8080/api/pedidos/${pedidoEdit.id}`,
+      `${API_URL}/pedidos/${pedidoEdit.id}`,
       {
         method: "PUT",
         headers: {
@@ -87,9 +89,14 @@ const atualizarPedido = async () => {
 };
 
 
-  useEffect(() => {
-    carregarPedidos();
-  }, [page, status]);
+useEffect(() => {
+  const fetchData = async () => {
+    setLoading(true); // <-- Ativa o loading ao começar
+    await carregarPedidos();
+  };
+  fetchData();
+}, [page, status]);
+
 
   return (
     <div className="p-6 text-gray-200">
@@ -102,13 +109,14 @@ const atualizarPedido = async () => {
       </motion.h2>
 
       {/* Filtro de Status */}
-      <FiltroStatus status={status} setStatus={setStatus} setPage={setPage} />
+      <FiltroStatus status={status} setStatus={setStatus} setPage={setPage} setLoading={setLoading} />
 
       {/* Tabela de Pedidos */}
       <TabelaPedidos
         pedidos={pedidos}
         setPedidoEdit={setPedidoEdit}
         setForm={setForm}
+        loading={loading}
       />
 
       {/* Paginação */}

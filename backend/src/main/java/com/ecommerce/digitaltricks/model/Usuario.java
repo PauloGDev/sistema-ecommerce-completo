@@ -28,7 +28,7 @@ public class Usuario {
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> roles;
 
-    // 🔹 Relacionamento bidirecional
+    // Relacionamento bidirecional
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Perfil perfil;
 
@@ -39,6 +39,15 @@ public class Usuario {
         this.password = password;
         this.roles = roles;
         this.email = email;
+    }
+
+    public Usuario(Long id, String username, String nome, String email, StatusUsuario status, Set<String> roles) {
+        this.id = id;
+        this.username = username;
+        this.nome = nome;
+        this.email = email;
+        this.status = status;
+        this.roles = roles;
     }
 
     // Getters e Setters

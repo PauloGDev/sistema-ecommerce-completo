@@ -15,17 +15,13 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Origem do front (pode adicionar mais se precisar)
-        config.setAllowedOriginPatterns(List.of("http://localhost:5173"));
+        config.setAllowedOriginPatterns(List.of("https://sublimeperfumes.com.br", "https://www.sublimeperfumes.com.br", "http://localhost:5173"));
 
-        // Headers e métodos
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
 
-        // Essencial para cookies e Authorization
         config.setAllowCredentials(true);
 
-        // Explicita que o Authorization será aceito no response
         config.setExposedHeaders(List.of("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

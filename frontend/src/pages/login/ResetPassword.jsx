@@ -10,6 +10,8 @@ const ResetPassword = () => {
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+    const API_URL = import.meta.env.VITE_API_URL;
+
 
   const handleReset = async (e) => {
     e.preventDefault();
@@ -17,7 +19,7 @@ const ResetPassword = () => {
       setLoading(true);
       setMsg("");
       const res = await fetch(
-        `http://localhost:8080/api/auth/reset-password?token=${token}&novaSenha=${senha}`,
+        `${API_URL}/auth/reset-password?token=${token}&novaSenha=${senha}`,
         { method: "POST" }
       );
       if (!res.ok) throw new Error();

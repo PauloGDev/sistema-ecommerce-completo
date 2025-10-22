@@ -20,7 +20,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthenticationManager authManager;
@@ -44,6 +44,10 @@ public class AuthController {
         this.emailService = emailService;
     }
 
+    // ============================================================
+    // =============== Autenticação e Cadastro ====================
+    // ============================================================
+
     @GetMapping("/validate")
     public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -63,18 +67,18 @@ public class AuthController {
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
 
         request.setEmail(request.getEmail().toLowerCase());
-        // Evitar duplicação
+
         if (usuarioRepository.existsByUsername(request.getUsername())) {
             return ResponseEntity.badRequest().body("Usuário já está em uso!");
         }
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             return ResponseEntity.badRequest().body("Email já registrado!");
-
-        }if (perfilRepository.existsByCpf(request.getCpf())) {
+        }
+        if (perfilRepository.existsByCpf(request.getCpf())) {
             return ResponseEntity.badRequest().body("CPF já registrado!");
         }
 
-        // 1. Criar usuário
+        // Criar usuário
         Usuario usuario = new Usuario();
         usuario.setUsername(request.getUsername());
         usuario.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -84,13 +88,12 @@ public class AuthController {
 
         usuario = usuarioRepository.save(usuario);
 
-        // 2. Criar perfil vinculado
+        // Criar perfil vinculado
         Perfil perfil = new Perfil();
         perfil.setUsuario(usuario);
         perfil.setNomeCompleto(request.getNomeCompleto());
         perfil.setCpf(request.getCpf());
         perfil.setTelefone(request.getTelefone());
-
         perfilRepository.save(perfil);
 
         return ResponseEntity.ok("Usuário e Perfil criados com sucesso!");
@@ -108,6 +111,10 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(token, usuario.getId(), usuario.getUsername()));
     }
 
+    // ============================================================
+    // =============== Recuperação de Senha =======================
+    // ============================================================
+
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) throws MessagingException {
         Usuario usuario = usuarioRepository.findByEmail(email)
@@ -117,21 +124,15 @@ public class AuthController {
         usuario.setResetToken(token);
         usuarioRepository.save(usuario);
 
-        String resetLink = "http://localhost:5173/reset-password?token=" + token;
+        // URL real para frontend
+        String resetLink = "https://sublimeperfumes.com.br/reset-password?token=" + token;
 
-        String conteudoHtml = """
-        <div style="font-family: Arial, sans-serif; color: #333;">
-            <h2>Recuperação de Senha</h2>
-            <p>Olá <b>%s</b>,</p>
-            <p>Recebemos um pedido para redefinir sua senha. Clique no botão abaixo:</p>
-            <a href="%s" style="background: #f59e0b; color: white; padding: 10px 20px;
-                text-decoration: none; border-radius: 5px;">Redefinir Senha</a>
-            <p>Se você não solicitou, apenas ignore este email.</p>
-            <p>Equipe <b>Digital Tricks</b></p>
-        </div>
-        """.formatted(usuario.getUsername(), resetLink);
-
-        emailService.enviarEmail(email, "Recuperação de senha - Digital Tricks", conteudoHtml);
+        // Usa o template EmailService
+        emailService.enviarRedefinicaoSenha(
+                usuario.getEmail(),
+                usuario.getUsername(),
+                resetLink
+        );
 
         return ResponseEntity.ok("Email de recuperação enviado!");
     }
@@ -140,7 +141,7 @@ public class AuthController {
     public ResponseEntity<?> resetPassword(@RequestParam String token,
                                            @RequestParam String novaSenha) {
         Usuario usuario = usuarioRepository.findByResetToken(token)
-                .orElseThrow(() -> new RuntimeException("Token inválido"));
+                .orElseThrow(() -> new RuntimeException("Token inválido ou expirado"));
 
         usuario.setPassword(passwordEncoder.encode(novaSenha));
         usuario.setResetToken(null);

@@ -5,10 +5,9 @@ import UsuarioTabela from "./usuarios/UsuarioTabela";
 import UsuarioPerfilDrawer from "./usuarios/UsuarioPerfilDrawer";
 import UsuarioModalNovo from "./usuarios/UsuarioModalNovo";
 import UsuarioModalEdicao from "./usuarios/UsuarioModalEdicao";
+import ConfirmDialog from "./ConfirmDialog";
 
-const API_URL = "http://localhost:8080/api/usuarios";
-const PERFIL_URL = "http://localhost:8080/api/perfis";
-
+  const API_URL = import.meta.env.VITE_API_URL;
 const GerenciarUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +25,8 @@ const GerenciarUsuarios = () => {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [perfil, setPerfil] = useState(null);
+const [confirmOpen, setConfirmOpen] = useState(false);
+const [usuarioParaExcluir, setUsuarioParaExcluir] = useState(null);
 
   useEffect(() => {
     fetchUsuarios();
@@ -35,7 +36,7 @@ const GerenciarUsuarios = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const url = `${API_URL}?page=${page}&size=5${filtro ? `&status=${filtro}` : ""}`;
+      const url = `${API_URL}/usuarios?page=${page}&size=5${filtro ? `&status=${filtro}` : ""}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -43,6 +44,7 @@ const GerenciarUsuarios = () => {
       const data = await res.json();
       setUsuarios(data.content);
       setTotalPages(data.totalPages);
+      console.log(data.content)
     } catch (err) {
       console.error("Erro no fetchUsuarios:", err);
     } finally {
@@ -53,7 +55,7 @@ const GerenciarUsuarios = () => {
   const abrirPerfil = async (usuarioId) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`${PERFIL_URL}/${usuarioId}`, {
+      const res = await fetch(`${API_URL}/perfis/${usuarioId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Erro ao buscar perfil");
@@ -68,7 +70,7 @@ const GerenciarUsuarios = () => {
 const criarUsuario = async () => {
   try {
     const token = localStorage.getItem("token");
-    const res = await fetch(API_URL, {
+    const res = await fetch(`${API_URL}/usuarios`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -104,7 +106,7 @@ const atualizarUsuario = async () => {
     }
     delete body.novaSenha;
 
-    const res = await fetch(`${API_URL}/${usuarioSelecionado.id}`, {
+    const res = await fetch(`${API_URL}/usuarios/${usuarioSelecionado.id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -119,6 +121,32 @@ const atualizarUsuario = async () => {
     setUsuarioSelecionado(null);
   } catch (err) {
     console.error("Erro atualizarUsuario:", err);
+  }
+};
+
+const confirmarExclusao = (id) => {
+  setUsuarioParaExcluir(id);
+  setConfirmOpen(true);
+};
+
+const excluirUsuario = async () => {
+  if (!usuarioParaExcluir) return;
+  try {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${API_URL}/usuarios/${usuarioParaExcluir}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) throw new Error("Erro ao excluir usuário");
+    await fetchUsuarios();
+  } catch (err) {
+    console.error("Erro excluirUsuario:", err);
+  } finally {
+    setConfirmOpen(false);
+    setUsuarioParaExcluir(null);
   }
 };
 
@@ -165,9 +193,18 @@ const atualizarUsuario = async () => {
         totalPages={totalPages}
         setPage={setPage}
         abrirModal={(u) => { setUsuarioSelecionado(u); setModalOpen(true); }}
-        excluirUsuario={(id) => console.log("Excluir", id)}
+        excluirUsuario={(id) => confirmarExclusao(id)}
         abrirPerfil={abrirPerfil}
       />
+      
+      <ConfirmDialog
+  open={confirmOpen}
+  title="Excluir Usuário"
+  message="Tem certeza que deseja excluir este usuário? Essa ação não poderá ser desfeita."
+  onConfirm={excluirUsuario}
+  onCancel={() => setConfirmOpen(false)}
+/>
+
 
       {/* Modais */}
       <AnimatePresence>

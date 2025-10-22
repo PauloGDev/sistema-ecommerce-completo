@@ -11,6 +11,7 @@ public class Endereco {
 
     private String logradouro;
     private String numero;
+    private String complemento;
     private String bairro;
     private String cidade;
     private String estado;
@@ -104,5 +105,13 @@ public class Endereco {
 
     public void setPerfil(Perfil perfil) {
         this.perfil = perfil;
+    }
+
+    public String getComplemento() {
+        return complemento;
+    }
+
+    public void setComplemento(String complemento) {
+        this.complemento = complemento;
     }
 }

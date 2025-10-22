@@ -35,7 +35,7 @@ const Paginacao = ({ pagina, totalPaginas, mudarPagina }) => {
         disabled={pagina === 1}
         onClick={() => mudarPagina(pagina - 1)}
         aria-label="Página anterior"
-        className="disabled:opacity-40 p-2 rounded hover:bg-gray-700"
+        className="disabled:opacity-40 p-2 text-gray-300 rounded hover:bg-gray-700"
       >
         <ChevronLeft className="w-5 h-5" />
       </button>
@@ -46,7 +46,7 @@ const Paginacao = ({ pagina, totalPaginas, mudarPagina }) => {
           <button
             onClick={() => mudarPagina(1)}
             className={`px-3 py-1 rounded ${
-              pagina === 1 ? "font-bold text-amber-400" : "hover:bg-gray-700"
+              pagina === 1 ? "font-bold text-amber-400" : " hover:bg-gray-700"
             }`}
           >
             1
@@ -64,7 +64,7 @@ const Paginacao = ({ pagina, totalPaginas, mudarPagina }) => {
           className={`px-3 py-1 rounded ${
             pagina === p
               ? "font-bold text-amber-400 bg-gray-700"
-              : "hover:bg-gray-700"
+              : "hover:bg-gray-700 text-gray-300"
           }`}
         >
           {p}
@@ -81,7 +81,7 @@ const Paginacao = ({ pagina, totalPaginas, mudarPagina }) => {
             onClick={() => mudarPagina(totalPaginas)}
             className={`px-3 py-1 rounded ${
               pagina === totalPaginas
-                ? "font-bold text-amber-400"
+                ? "font-bold text-amber-400 text-gray-300"
                 : "hover:bg-gray-700"
             }`}
           >
@@ -95,7 +95,7 @@ const Paginacao = ({ pagina, totalPaginas, mudarPagina }) => {
         disabled={pagina === totalPaginas}
         onClick={() => mudarPagina(pagina + 1)}
         aria-label="Próxima página"
-        className="disabled:opacity-40 p-2 rounded hover:bg-gray-700"
+        className="disabled:opacity-40 p-2 rounded text-gray-300 hover:bg-gray-700"
       >
         <ChevronRight className="w-5 h-5" />
       </button>

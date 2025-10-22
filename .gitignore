@@ -1,6 +1,7 @@
 # Node.js
 frontend/node_modules/
 frontend/build/
+frontend/.env
 
 # Java / Spring Boot
 backend/target/

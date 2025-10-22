@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import AddressSelector from "../checkout/AdressSelector";
 
-const EnderecoEntregaBox = ({ fadeUp, onSelect }) => {
+const EnderecoEntregaBox = ({ fadeUp, onSelect, perfilId }) => {
   return (
     <motion.div
       variants={fadeUp}
@@ -12,7 +12,7 @@ const EnderecoEntregaBox = ({ fadeUp, onSelect }) => {
       className="mt-10 border bg-gradient-to-br from-black to-gray-900 rounded-lg p-4 text-gray-200"
     >
       <h2 className="text-lg font-semibold text-white mb-2">Endereço de Entrega</h2>
-      <AddressSelector onSelect={onSelect} />
+      <AddressSelector onSelect={onSelect} perfilId={perfilId} />
     </motion.div>
   );
 };

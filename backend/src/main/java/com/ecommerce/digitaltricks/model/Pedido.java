@@ -21,7 +21,6 @@ public class Pedido {
     @JoinColumn(name = "pedido_id")
     private List<ItemPedido> itens = new ArrayList<>();
 
-
     @ManyToOne
     @JoinColumn(name = "endereco_id")
     private Endereco enderecoEntrega;
@@ -35,6 +34,10 @@ public class Pedido {
     private String cpf;
     private String stripeSessionId;
     private String linkRastreio;
+    private String servicoFrete;
+    private Double valorFrete;
+    private String prazoFrete;
+    private String tipoPagamento;
 
     public Pedido() {}
 
@@ -91,4 +94,21 @@ public class Pedido {
 
     public String getStripeSessionId() { return stripeSessionId; }
     public void setStripeSessionId(String stripeSessionId) { this.stripeSessionId = stripeSessionId; }
+
+    public String getServicoFrete() { return servicoFrete; }
+    public void setServicoFrete(String servicoFrete) { this.servicoFrete = servicoFrete; }
+
+    public Double getValorFrete() { return valorFrete; }
+    public void setValorFrete(Double valorFrete) { this.valorFrete = valorFrete; }
+
+    public String getPrazoFrete() { return prazoFrete; }
+    public void setPrazoFrete(String prazoFrete) { this.prazoFrete = prazoFrete; }
+
+    public String getTipoPagamento() {
+        return tipoPagamento;
+    }
+
+    public void setTipoPagamento(String tipoPagamento) {
+        this.tipoPagamento = tipoPagamento;
+    }
 }

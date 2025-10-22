@@ -1,4 +1,4 @@
-const FiltroStatus = ({ status, setStatus, setPage }) => {
+const FiltroStatus = ({ status, setStatus, setPage, setLoading }) => {
   const statuses = ["", "PENDENTE", "PAGO", "ENVIADO", "CONCLUIDO", "CANCELADO"];
 
   return (
@@ -9,6 +9,7 @@ const FiltroStatus = ({ status, setStatus, setPage }) => {
           onClick={() => {
             setStatus(s);
             setPage(0);
+            setLoading(true); // <-- Ativa o loading ao filtrar
           }}
           className={`px-4 py-2 rounded-md ${
             status === s

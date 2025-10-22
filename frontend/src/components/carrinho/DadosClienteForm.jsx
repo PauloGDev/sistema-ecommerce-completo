@@ -53,30 +53,14 @@ const DadosClienteForm = ({
 
       {/* Telefone */}
       <div className="mb-4">
-        <label className="block text-sm mb-1 flex justify-between items-center">
-          <span>Telefone (padrão)</span>
-          {!editarTelefone && (
-            <button
-              onClick={() => setEditarTelefone(true)}
-              className="text-amber-400 text-lg hover:underline"
-            >
-              Editar
-            </button>
-          )}
-        </label>
-        {editarTelefone ? (
-          <IMaskInput
-            mask="+55 00 0 0000-0000"
-            value={telefone}
-            onAccept={(value) => setTelefone(value)}
-            className="w-full p-2 rounded bg-gray-800 text-white"
-            placeholder="+55 11 9 9999-9999"
-          />
-        ) : (
-          <div className="p-2 rounded bg-gray-800 text-gray-300">
-            {usuarioData.telefone || "Nenhum telefone cadastrado"}
-          </div>
-        )}
+        <label className="block text-sm mb-1">Telefone</label>
+        <IMaskInput
+          mask="(00) 0 0000-0000"
+          value={telefone}
+          onAccept={(value) => setTelefone(value)}
+          className="w-full p-2 rounded bg-gray-800 text-white"
+          placeholder="(99) 9 8123-4567"
+        />
       </div>
 
       {/* Email */}

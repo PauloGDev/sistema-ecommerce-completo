@@ -8,5 +8,6 @@ public record EnderecoDTO(
         String cidade,
         String estado,
         String cep,
+        String complemento,
         boolean padrao
 ) {}

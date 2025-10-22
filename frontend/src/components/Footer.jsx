@@ -3,9 +3,15 @@ import { assets } from "../assets/assets";
 import { Link } from "react-router-dom";
 import {
   RiInstagramLine,
-  RiPinterestLine,
   RiWhatsappLine,
 } from "react-icons/ri";
+import {
+  FaCcVisa,
+  FaCcMastercard,
+  FaPix,
+  FaCcAmex,
+  FaCcDinersClub,
+} from "react-icons/fa6";
 
 const Footer = () => {
   return (
@@ -13,23 +19,27 @@ const Footer = () => {
       {/* Área principal */}
       <div className="max-w-7xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-3 items-center gap-12">
         
-        {/* Coluna 1 - Links */}
+        {/* Coluna 1 - Navegação */}
         <div className="flex flex-col items-center md:items-start space-y-3">
           <h3 className="text-lg font-semibold text-white">Navegação</h3>
           <Link to="/" className="hover:text-amber-400 transition">Início</Link>
-          <Link to="/sobre" className="hover:text-amber-400 transition">Sobre</Link>
-          <Link to="/projetos" className="hover:text-amber-400 transition">Projetos</Link>
+          <Link to="/produtos" className="hover:text-amber-400 transition">Produtos</Link>
+          <Link to="/sobre" className="hover:text-amber-400 transition">Sobre Nós</Link>
+          <a href="https://wa.me/5585984642900" className="hover:text-amber-400 transition">Contato</a>
+          <Link to="/direitos" className="hover:text-amber-400 transition">
+            Política de Privacidade e Termos de uso
+          </Link>
         </div>
 
         {/* Coluna 2 - Logo central */}
         <div className="flex flex-col items-center text-center space-y-4">
           <img
             src={assets.logo_branca}
-            alt="AR Studio Logo"
+            alt="Sublime Perfumes Logo"
             className="w-32 sm:w-40"
           />
-          <p className="max-w-sm text-gray-400 text-sm">
-            Sublime Perfumes Fracionados - Perfumes importados, originais e marcantes.
+          <p className="max-w-sm text-gray-400 text-sm leading-relaxed">
+            Perfumes importados, originais e marcantes — Sublime Perfumes Fracionados.
           </p>
         </div>
 
@@ -38,7 +48,7 @@ const Footer = () => {
           <h3 className="text-lg font-semibold text-white">Conecte-se</h3>
           <div className="flex gap-5">
             <a
-              href="https://www.instagram.com/anaritalunna/"
+              href="https://www.instagram.com/perfumesfracionadossublime/"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-amber-400 transition"
@@ -46,15 +56,7 @@ const Footer = () => {
               <RiInstagramLine className="w-6 h-6" />
             </a>
             <a
-              href="https://br.pinterest.com/anaritalunna/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:text-amber-400 transition"
-            >
-              <RiPinterestLine className="w-6 h-6" />
-            </a>
-            <a
-              href="https://wa.me/5585997295809"
+              href="https://wa.me/5585984642900"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-amber-400 transition"
@@ -68,9 +70,26 @@ const Footer = () => {
       {/* Linha divisória */}
       <div className="border-t border-white/10"></div>
 
-      {/* Créditos */}
+      {/* Formas de pagamento */}
+      <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col items-center space-y-3">
+        <h3 className="text-sm font-semibold text-white">Formas de Pagamento</h3>
+        <div className="flex flex-wrap justify-center gap-5 text-gray-400 text-3xl">
+          <FaCcVisa className="hover:text-amber-400 transition" />
+          <FaCcMastercard className="hover:text-amber-400 transition" />
+          <FaCcAmex className="hover:text-amber-400 transition" />
+          <FaCcDinersClub className="hover:text-amber-400 transition" />
+          <FaPix className="hover:text-amber-400 transition" />
+        </div>
+      </div>
+
+      {/* Créditos + Direitos */}
+      <div className="border-t border-white/10"></div>
       <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row justify-between items-center text-xs text-gray-400">
-        <p>© 2025 Sublime Perfumes Fracionados. Todos os direitos reservados.</p>
+        <p>
+          © {new Date().getFullYear()} Sublime Perfumes Fracionados — Todos os direitos reservados.
+          <br />
+          CNPJ: 63.065.539/0001-49 — Eusébio - CE
+        </p>
         <a
           href="https://digitaltricks.com.br"
           target="_blank"
