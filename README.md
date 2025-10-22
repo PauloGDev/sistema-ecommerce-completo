@@ -165,6 +165,6 @@ Qualquer reprodução, redistribuição ou uso sem autorização é **estritamen
 
 📧 **E-mail:** contato@digitaltricks.com.br  
 🌐 **Site:** [digitaltricks.com.br](https://digitaltricks.com.br)  
-📱 **WhatsApp:** (85) 92174-3200  
+📱 **WhatsApp:** +55 (85) 92174-3200 
 
 💼 **Digital Tricks – Transformando ideias em experiências digitais.**
