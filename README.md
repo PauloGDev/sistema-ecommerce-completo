@@ -28,7 +28,7 @@ Um site completo, responsivo e otimizado, preparado para campanhas de marketing 
 
 | Home | Catálogo | Checkout | Painel Admin |
 |------|-----------|-----------|--------------|
-| ![Home](./docs/home.png) | ![Catálogo](./docs/catalogo.png) | ![Checkout](./docs/checkout.png) | ![Painel](./docs/admin.png) |
+| ![Home](./docs/home.gif) | ![Catálogo](./docs/catalogo.gif) | ![Checkout](./docs/checkout.png) | ![Painel](./docs/dashboard.gif) |
 
 > *As imagens acima são demonstrativas do fluxo real de navegação e gerenciamento da loja.*
 
@@ -62,7 +62,6 @@ Sistema com painel administrativo, gerenciamento de usuários, catálogo de prod
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 ---
 
