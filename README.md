@@ -1,11 +1,9 @@
 # 💎 E-commerce – Sublime Perfumes
 
-## 🌐 Demonstração ao Vivo
+> 🛍️ Plataforma completa de vendas online desenvolvida pela **[Digital Tricks](https://digitaltricks.com.br)**  
+> 💳 Pagamentos via **Stripe**, painel admin em tempo real e layout responsivo em **ReactJS + TailwindCSS**  
+> 🌐 **Acesse:** [sublimeperfumes.com.br](https://sublimeperfumes.com.br)
 
-🛒 **Acesse o projeto:** [sublimeperfumes.com.br](https://sublimeperfumes.com.br)
-
-📱 Site 100% responsivo, desenvolvido pela [Digital Tricks](https://digitaltricks.com.br)  
-💳 Integração completa com **Stripe** e painel administrativo em tempo real.
 
 ---
 
