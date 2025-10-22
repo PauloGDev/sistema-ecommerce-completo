@@ -1,9 +1,11 @@
 # 💎 E-commerce – Sublime Perfumes
 
-> 🛍️ Plataforma completa de vendas online desenvolvida pela **[Digital Tricks](https://digitaltricks.com.br)**  
-> 💳 Pagamentos via **Stripe**, painel admin em tempo real e layout responsivo em **ReactJS + TailwindCSS**  
-> 🌐 **Acesse:** [sublimeperfumes.com.br](https://sublimeperfumes.com.br)
+## 🌐 Demonstração ao Vivo
 
+🛒 **Acesse o projeto:** [sublimeperfumes.com.br](https://sublimeperfumes.com.br)
+
+📱 Site 100% responsivo, desenvolvido pela [Digital Tricks](https://digitaltricks.com.br)  
+💳 Integração completa com **Stripe** e painel administrativo em tempo real.
 
 ---
 
@@ -45,13 +47,6 @@ Um site completo, responsivo e otimizado, preparado para campanhas de marketing 
 
 ---
 
-![Ecommerce](https://img.shields.io/badge/Ecommerce-Spring%20Boot%20%2B%20ReactJS-blue?style=for-the-badge&logo=java)
-
-Projeto completo de **E-commerce** utilizando **Spring Boot** no backend e **ReactJS** no frontend.  
-Sistema com painel administrativo, gerenciamento de usuários, catálogo de produtos e integração com **Stripe** para pagamentos online.
-
----
-
 ## 🛠 Tecnologias
 
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=java&logoColor=white)
@@ -76,88 +71,100 @@ Sistema com painel administrativo, gerenciamento de usuários, catálogo de prod
 
 ---
 
-## 🚀 Instalação e Execução
+## ⚙️ Configuração e Execução
 
-### 🔧 Pré-requisitos
+### 🔧 Variáveis de Ambiente
 
-- Java 17+ e Gradle  
-- Node.js 16+ e npm/yarn  
-- PostgreSQL  
-- (Opcional) Docker e Docker Compose
+Crie um arquivo **.env** na raiz do projeto com as seguintes chaves:
 
-### 🌍 Variáveis de ambiente
-
-Crie um arquivo `.env` na raiz:
-
-env
+```env
 # Stripe
 STRIPE_SECRET_KEY=sk_test_XXXXXX
 
-# Spring / Banco
+# Banco de Dados (PostgreSQL)
 SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ecommerce
 SPRING_DATASOURCE_USERNAME=postgres
 SPRING_DATASOURCE_PASSWORD=senha
 
 # Segurança
 JWT_SECRET=umSegredoMuitoSeguro
+```
 
-🖥️ Backend (Spring Boot)
+---
+
+### 🖥️ Backend (Spring Boot)
+
+```bash
 cd backend
 mvn clean package
 mvn spring-boot:run
+```
 
+O backend estará disponível em:  
+➡️ **http://localhost:8080**
 
-O backend estará em http://localhost:8080.
+---
 
-💻 Frontend (React)
+### 💻 Frontend (React)
+
+```bash
 cd frontend
 npm install
 npm run dev
+```
 
+O frontend abrirá em:  
+➡️ **http://localhost:3000**
 
-O frontend abrirá em http://localhost:3000.
+Para gerar o build de produção:
 
-Para gerar build de produção:
-
+```bash
 npm run build
+```
 
-🧠 Aprendizados e Desafios
+---
 
-Durante o desenvolvimento, enfrentei desafios de integração entre frontend e backend, especialmente:
+## 🧠 Aprendizados e Desafios
 
-Configuração de CORS e autenticação JWT
+Durante o desenvolvimento, alguns dos principais desafios enfrentados incluíram:
 
-Sincronização de estados entre React e API REST
+- 🔐 Configuração de **CORS** e autenticação **JWT** entre o backend e frontend  
+- 🔄 Sincronização de estados entre o **React** e a **API REST**  
+- 💳 Implementação **segura de pagamentos com Stripe**  
+- 🚀 Deploy otimizado com **NGINX + SSL** em ambiente Linux  
+- ⚡ Otimização de performance e build para produção  
 
-Implementação segura de pagamentos via Stripe
+Essas etapas fortaleceram minha experiência com **arquiteturas full stack modernas**, **integração segura de APIs** e **deploy em produção com Docker**.
 
-Deploy com NGINX + SSL e otimização de performance
+---
 
-Essas etapas fortaleceram minha experiência com sistemas full stack e deploy em ambiente de produção.
+## 🔐 Observações Importantes
 
-🔐 Observações
+⚠️ **Nunca exponha** a variável `STRIPE_SECRET_KEY` em repositórios públicos.  
+⚙️ Revise suas configurações no `application.yml` ou `application.properties` antes do deploy.  
+🌐 Ajuste o **CORS** para permitir apenas o domínio de produção:  
+`https://sublimeperfumes.com.br`
 
-⚠️ Não exponha a STRIPE_SECRET_KEY em repositórios públicos
+---
 
-Verifique configurações de application.yml / application.properties
+## 🤝 Créditos
 
-Ajuste CORS para o domínio em produção (https://sublimeperfumes.com.br)
+👨‍💻 **Desenvolvido por [Digital Tricks](https://digitaltricks.com.br)**  
+🚀 Projeto real: [sublimeperfumes.com.br](https://sublimeperfumes.com.br)  
 
-🤝 Créditos
+---
 
-Desenvolvido por Digital Tricks
+## 📄 Licença
 
-Projeto real: sublimeperfumes.com.br
+Este projeto foi desenvolvido para **fins comerciais e de demonstração**.  
+Qualquer reprodução, redistribuição ou uso sem autorização é **estritamente proibida**.
 
-📄 Licença
+---
 
-Este projeto foi desenvolvido para fins comerciais e demonstração.
-Reprodução ou redistribuição sem autorização é proibida.
+## 📬 Contato
 
-📬 Contato
+📧 **E-mail:** contato@digitaltricks.com.br  
+🌐 **Site:** [digitaltricks.com.br](https://digitaltricks.com.br)  
+📱 **WhatsApp:** (85) 92174-3200  
 
-📧 contato@digitaltricks.com.br
-
-🌐 digitaltricks.com.br
-
-📱 (85) 92174-3200
+💼 **Digital Tricks – Transformando ideias em experiências digitais.**
