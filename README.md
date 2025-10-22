@@ -92,7 +92,7 @@ Sistema com painel administrativo, gerenciamento de usuários, catálogo de prod
 
 Crie um arquivo `.env` na raiz:
 
-```env
+env
 # Stripe
 STRIPE_SECRET_KEY=sk_test_XXXXXX
 
@@ -103,3 +103,64 @@ SPRING_DATASOURCE_PASSWORD=senha
 
 # Segurança
 JWT_SECRET=umSegredoMuitoSeguro
+
+🖥️ Backend (Spring Boot)
+cd backend
+mvn clean package
+mvn spring-boot:run
+
+
+O backend estará em http://localhost:8080.
+
+💻 Frontend (React)
+cd frontend
+npm install
+npm run dev
+
+
+O frontend abrirá em http://localhost:3000.
+
+Para gerar build de produção:
+
+npm run build
+
+🧠 Aprendizados e Desafios
+
+Durante o desenvolvimento, enfrentei desafios de integração entre frontend e backend, especialmente:
+
+Configuração de CORS e autenticação JWT
+
+Sincronização de estados entre React e API REST
+
+Implementação segura de pagamentos via Stripe
+
+Deploy com NGINX + SSL e otimização de performance
+
+Essas etapas fortaleceram minha experiência com sistemas full stack e deploy em ambiente de produção.
+
+🔐 Observações
+
+⚠️ Não exponha a STRIPE_SECRET_KEY em repositórios públicos
+
+Verifique configurações de application.yml / application.properties
+
+Ajuste CORS para o domínio em produção (https://sublimeperfumes.com.br)
+
+🤝 Créditos
+
+Desenvolvido por Digital Tricks
+
+Projeto real: sublimeperfumes.com.br
+
+📄 Licença
+
+Este projeto foi desenvolvido para fins comerciais e demonstração.
+Reprodução ou redistribuição sem autorização é proibida.
+
+📬 Contato
+
+📧 contato@digitaltricks.com.br
+
+🌐 digitaltricks.com.br
+
+📱 (85) 92174-3200
